@@ -1,0 +1,25 @@
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install pnpm and dependencies
+RUN npm install -g pnpm
+RUN pnpm install
+
+# Copy source code
+COPY frontend/ ./frontend/
+COPY components/ ./components/
+COPY lib/ ./lib/
+COPY hooks/ ./hooks/
+COPY public/ ./public/
+COPY next.config.mjs tsconfig.json components.json postcss.config.mjs ./
+
+# Expose port
+EXPOSE 3000
+
+# Default command
+CMD ["npm", "run", "dev"]
