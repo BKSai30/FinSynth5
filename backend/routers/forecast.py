@@ -14,6 +14,7 @@ from ..services.knowledge_service import KnowledgeService
 from ..services.query_parser import QueryParser
 from ..services.calculators.large_customer_calculator import LargeCustomerCalculator
 from ..services.calculators.smb_calculator import SMBCalculator
+from ..workers.tasks import generate_excel_report
 
 
 router = APIRouter(prefix="/forecast", tags=["forecast"])
@@ -150,7 +151,7 @@ async def _execute_calculation(parsed_intent: Dict[str, Any]) -> tuple[Dict[str,
             **updated_assumptions["smb_customer"]
         )
         
-        # Combine results
+        # Combine results with detailed metrics
         result_data = {
             "forecast_type": "total_revenue",
             "timeframe_months": timeframe_months,
@@ -167,11 +168,42 @@ async def _execute_calculation(parsed_intent: Dict[str, Any]) -> tuple[Dict[str,
             smb_revenue = smb_data[i]["revenue"]
             total_revenue = large_revenue + smb_revenue
             
+            # Calculate sales people based on onboarding ramp (matches image pattern: 1,2,2,2,3,4,5,6,7,8,9)
+            sales_people_ramp = [1, 2, 2, 2, 3, 4, 5, 6, 7, 8, 9]
+            sales_people = sales_people_ramp[i] if i < len(sales_people_ramp) else sales_people_ramp[-1]
+            
+            # Calculate sales enquiries and conversions (from SMB assumptions)
+            sales_enquiries = 160  # Constant as shown in image
+            conversion_rate = updated_assumptions["smb_customer"].get("conversion_rate", 0.45)
+            
             result_data["monthly_data"].append({
                 "month": i + 1,
                 "large_customer_revenue": large_revenue,
                 "smb_customer_revenue": smb_revenue,
-                "total_revenue": total_revenue
+                "total_revenue": total_revenue,
+                "total_revenue_mn": round(total_revenue / 1000000, 2),
+                # Sales & Large Customer Metrics
+                "sales_people": sales_people,
+                "large_accounts_per_sales_person": 1,  # Constant as shown in image
+                "large_accounts_onboarded": large_data[i]["new_customers"],
+                "cumulative_large_customers": large_data[i]["cumulative_customers"],
+                "avg_revenue_per_large_customer": updated_assumptions["large_customer"].get("arpu", 16667),
+                # Marketing Metrics
+                "digital_marketing_spend": updated_assumptions["smb_customer"].get("marketing_spend", 200000),
+                "avg_cac": updated_assumptions["smb_customer"].get("cac", 1250),
+                "sales_enquiries": sales_enquiries,
+                "conversion_rate": conversion_rate,
+                # SMB Customer Metrics
+                "smb_customers_onboarded": smb_data[i]["new_customers"],
+                "cumulative_smb_customers": smb_data[i]["cumulative_customers"],
+                "avg_revenue_per_smb_customer": updated_assumptions["smb_customer"].get("arpu", 5000),
+                # Additional detailed metrics from calculators
+                "large_churned_customers": large_data[i]["churned_customers"],
+                "smb_churned_customers": smb_data[i]["churned_customers"],
+                "large_growth_rate": updated_assumptions["large_customer"].get("growth_rate", 0.05),
+                "smb_growth_rate": updated_assumptions["smb_customer"].get("growth_rate", 0.03),
+                "large_churn_rate": updated_assumptions["large_customer"].get("churn_rate", 0.02),
+                "smb_churn_rate": updated_assumptions["smb_customer"].get("churn_rate", 0.05)
             })
             
             result_data["summary"]["total_revenue"] += total_revenue
@@ -314,3 +346,59 @@ async def list_forecasts(
         ))
     
     return responses
+
+
+@router.post("/export")
+async def export_forecast_to_excel(
+    query_id: int,
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Export a forecast to Excel format.
+    
+    Args:
+        query_id: ID of the forecast query to export
+        session: Database session dependency
+        
+    Returns:
+        Dictionary with task ID and status for tracking Excel generation
+        
+    Raises:
+        HTTPException: If forecast not found
+    """
+    # Get forecast query
+    query_result = await session.execute(
+        select(ForecastQuery).where(ForecastQuery.id == query_id)
+    )
+    forecast_query = query_result.scalar_one_or_none()
+    
+    if not forecast_query:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Forecast not found"
+        )
+    
+    # Get forecast result
+    result_query = await session.execute(
+        select(ForecastResult).where(ForecastResult.query_id == query_id)
+    )
+    forecast_result = result_query.scalar_one_or_none()
+    
+    if not forecast_result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Forecast result not found"
+        )
+    
+    # Start Excel generation task
+    task = generate_excel_report.delay(
+        query_id=query_id,
+        forecast_data=forecast_result.result,
+        assumptions=forecast_result.assumptions_used
+    )
+    
+    return {
+        "task_id": task.id,
+        "status": "processing",
+        "message": "Excel generation started"
+    }

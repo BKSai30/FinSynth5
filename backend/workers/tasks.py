@@ -156,26 +156,95 @@ def _create_summary_sheet(ws, forecast_data: Dict[str, Any], query_id: int):
 
 
 def _create_monthly_data_sheet(ws, forecast_data: Dict[str, Any]):
-    """Create the monthly data sheet with detailed breakdown."""
-    # Headers
-    headers = ["Month", "Large Customer Revenue", "SMB Customer Revenue", "Total Revenue"]
+    """Create the monthly data sheet with comprehensive metrics breakdown matching the image format."""
+    
+    # Define comprehensive headers matching the image
+    headers = [
+        "Metric", "Unit",
+        "M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11"
+    ]
+    
+    # Create header row
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col, value=header)
         cell.font = Font(bold=True)
         cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
         cell.font = Font(color="FFFFFF", bold=True)
     
-    # Data
+    # Define metrics structure matching the image
+    metrics = [
+        # Sales & Large Customer Acquisition Metrics
+        ("# of sales people", "count"),
+        ("# of large customer accounts they can sign per month/sales person", "count"),
+        ("# of large customer accounts onboarded per month", "count"),
+        ("Cumulative # of paying customers (large clients)", "count"),
+        ("Average revenue per customer (large clients)", "$ per month"),
+        
+        # Marketing Metrics
+        ("Digital Marketing spend per month", "$ per month"),
+        ("Average CAC (Customer Acquisition Cost)", "$ per customer"),
+        ("# of sales enquiries", "count"),
+        ("% conversions from demo to sign ups", "%"),
+        
+        # Small and Medium Customer Onboarding Metrics
+        ("# of paying customers onboarded", "count"),
+        ("Cumulative number of paying customers (small/medium clients)", "count"),
+        ("Average revenue per customer (small/medium clients)", "$ per customer"),
+        
+        # Revenue Metrics
+        ("Revenue from large clients", "$ per month"),
+        ("Revenue from small and medium clients", "$ per month"),
+        ("Total Revenues", "$ per month"),
+        ("Total Revenues (Mn)", "$ Mn per month")
+    ]
+    
+    # Get monthly data
     monthly_data = forecast_data.get('monthly_data', [])
-    for row, data in enumerate(monthly_data, start=2):
-        ws.cell(row=row, column=1, value=f"Month {data.get('month', row-1)}")
-        ws.cell(row=row, column=2, value=data.get('large_customer_revenue', 0))
-        ws.cell(row=row, column=3, value=data.get('smb_customer_revenue', 0))
-        ws.cell(row=row, column=4, value=data.get('total_revenue', 0))
+    
+    # Create data rows
+    for row_idx, (metric_name, unit) in enumerate(metrics, start=2):
+        # Metric name and unit
+        ws.cell(row=row_idx, column=1, value=metric_name)
+        ws.cell(row=row_idx, column=2, value=unit)
+        
+        # Monthly values
+        for col_idx, data in enumerate(monthly_data[:11], start=3):  # Limit to 11 months
+            value = _get_metric_value(data, metric_name)
+            ws.cell(row=row_idx, column=col_idx, value=value)
     
     # Format columns
-    for col in range(1, 5):
-        ws.column_dimensions[get_column_letter(col)].width = 20
+    ws.column_dimensions['A'].width = 50  # Metric names
+    ws.column_dimensions['B'].width = 20  # Units
+    for col in range(3, 14):  # M1-M11 columns
+        ws.column_dimensions[get_column_letter(col)].width = 15
+
+
+def _get_metric_value(data: Dict[str, Any], metric_name: str) -> Any:
+    """Extract the appropriate value for a given metric from monthly data."""
+    
+    metric_mapping = {
+        "# of sales people": data.get("sales_people", 0),
+        "# of large customer accounts they can sign per month/sales person": data.get("large_accounts_per_sales_person", 1),
+        "# of large customer accounts onboarded per month": data.get("large_accounts_onboarded", 0),
+        "Cumulative # of paying customers (large clients)": data.get("cumulative_large_customers", 0),
+        "Average revenue per customer (large clients)": data.get("avg_revenue_per_large_customer", 0),
+        
+        "Digital Marketing spend per month": data.get("digital_marketing_spend", 0),
+        "Average CAC (Customer Acquisition Cost)": data.get("avg_cac", 0),
+        "# of sales enquiries": data.get("sales_enquiries", 0),
+        "% conversions from demo to sign ups": round(data.get("conversion_rate", 0) * 100, 0),
+        
+        "# of paying customers onboarded": data.get("smb_customers_onboarded", 0),
+        "Cumulative number of paying customers (small/medium clients)": data.get("cumulative_smb_customers", 0),
+        "Average revenue per customer (small/medium clients)": data.get("avg_revenue_per_smb_customer", 0),
+        
+        "Revenue from large clients": data.get("large_customer_revenue", 0),
+        "Revenue from small and medium clients": data.get("smb_customer_revenue", 0),
+        "Total Revenues": data.get("total_revenue", 0),
+        "Total Revenues (Mn)": data.get("total_revenue_mn", 0)
+    }
+    
+    return metric_mapping.get(metric_name, 0)
 
 
 def _create_assumptions_sheet(ws, assumptions: Dict[str, Any]):

@@ -43,15 +43,14 @@ export default function FinSynthDashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          query_id: currentForecast.query_id,
-          forecast_data: currentForecast,
-          assumptions: currentAssumptions 
+          query_id: currentForecast.query_id
         })
       })
       
       if (response.ok) {
-        const { file_url } = await response.json()
-        window.open(file_url, '_blank')
+        const { task_id, status } = await response.json()
+        // For now, just show success message. In a real app, you'd poll for task completion
+        alert(`Excel export started! Task ID: ${task_id}`)
       }
     } catch (err) {
       console.error("Export failed:", err)
