@@ -1,153 +1,164 @@
 """
-SMB Customer Calculator for small/medium business client revenue forecasting.
-Implements the business logic as specified in the PRD.
-Pure Python calculations - no LLM involvement in math.
+SMB Customer Revenue Calculator
+Implements the financial model for small and medium business customers.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, List
+from datetime import datetime, timedelta
+import math
 
 
 class SMBCalculator:
     """
-    Calculator for SMB (small/medium business) customer revenue forecasting.
+    Calculator for SMB customer revenue forecasting.
     
-    Implements the business logic from the PRD:
-    - Default ARPU: $5,000 per month
-    - Marketing Spend: $200,000 per month
-    - CAC: $1,250
-    - Conversion Rate: 45%
-    - Growth Rate: 3% monthly
-    - Churn Rate: 5% monthly
+    Model assumptions:
+    - ARPU: $5,000 per month per customer
+    - Marketing spend: $200,000 per month
+    - CAC: $1,250 per customer
+    - Conversion rate: 45%
+    - Monthly growth: 3%
+    - Churn rate: 5% monthly
     """
     
     def __init__(
         self, 
-        default_arpu: float = 5000,
-        default_marketing_spend: float = 200000,
-        default_cac: float = 1250,
-        default_conversion_rate: float = 0.45
+        arpu: float = 5000.0,
+        marketing_spend: float = 200000.0,
+        cac: float = 1250.0,
+        conversion_rate: float = 0.45
     ):
-        """
-        Initialize calculator with default assumptions.
-        
-        Args:
-            default_arpu: Default Average Revenue Per User for SMB customers
-            default_marketing_spend: Default monthly marketing spend
-            default_cac: Default Customer Acquisition Cost
-            default_conversion_rate: Default conversion rate from marketing spend
-        """
-        self.default_arpu = default_arpu
-        self.default_marketing_spend = default_marketing_spend
-        self.default_cac = default_cac
-        self.default_conversion_rate = default_conversion_rate
-        self.default_growth_rate = 0.03  # 3% monthly growth
-        self.default_churn_rate = 0.05   # 5% monthly churn
+        self.arpu = arpu
+        self.marketing_spend = marketing_spend
+        self.cac = cac
+        self.conversion_rate = conversion_rate
+        self.monthly_growth_rate = 0.03
+        self.monthly_churn_rate = 0.05
     
-    def calculate(
-        self,
-        timeframe_months: int,
-        arpu: Optional[float] = None,
-        marketing_spend: Optional[float] = None,
-        cac: Optional[float] = None,
-        conversion_rate: Optional[float] = None,
-        growth_rate: Optional[float] = None,
-        churn_rate: Optional[float] = None
-    ) -> List[Dict[str, Any]]:
+    def calculate_revenue(
+        self, 
+        months: int = 12,
+        custom_arpu: float = None,
+        custom_marketing_spend: float = None,
+        custom_cac: float = None,
+        custom_conversion_rate: float = None,
+        custom_growth_rate: float = None,
+        custom_churn_rate: float = None
+    ) -> Dict[str, Any]:
         """
-        Calculate monthly revenue for SMB customers.
+        Calculate SMB customer revenue forecast.
         
         Args:
-            timeframe_months: Number of months to forecast
-            arpu: Override ARPU (defaults to self.default_arpu)
-            marketing_spend: Override marketing spend (defaults to self.default_marketing_spend)
-            cac: Override CAC (defaults to self.default_cac)
-            conversion_rate: Override conversion rate (defaults to self.default_conversion_rate)
-            growth_rate: Override growth rate (defaults to self.default_growth_rate)
-            churn_rate: Override churn rate (defaults to self.default_churn_rate)
+            months: Number of months to forecast
+            custom_arpu: Override default ARPU
+            custom_marketing_spend: Override default marketing spend
+            custom_cac: Override default CAC
+            custom_conversion_rate: Override default conversion rate
+            custom_growth_rate: Override default growth rate
+            custom_churn_rate: Override default churn rate
             
         Returns:
-            List of monthly data dictionaries with revenue, customers, and metadata
+            Dictionary with monthly data and summary
         """
-        # Use provided values or defaults
-        arpu = arpu or self.default_arpu
-        marketing_spend = marketing_spend or self.default_marketing_spend
-        cac = cac or self.default_cac
-        conversion_rate = conversion_rate or self.default_conversion_rate
-        growth_rate = growth_rate or self.default_growth_rate
-        churn_rate = churn_rate or self.default_churn_rate
+        # Use custom values if provided
+        arpu = custom_arpu or self.arpu
+        marketing_spend = custom_marketing_spend or self.marketing_spend
+        cac = custom_cac or self.cac
+        conversion_rate = custom_conversion_rate or self.conversion_rate
+        growth_rate = custom_growth_rate or self.monthly_growth_rate
+        churn_rate = custom_churn_rate or self.monthly_churn_rate
         
         monthly_data = []
-        cumulative_customers = 0
+        total_customers = 0
+        total_revenue = 0
+        total_marketing_spend = 0
         
-        for month in range(1, timeframe_months + 1):
-            # Calculate new customers from marketing spend
-            # New customers = (Marketing Spend / CAC) * Conversion Rate
-            new_customers = (marketing_spend / cac) * conversion_rate
+        for month in range(1, months + 1):
+            # Calculate leads from marketing spend
+            leads = marketing_spend / cac
             
-            # Apply growth rate to marketing spend (if specified)
-            if month > 1 and growth_rate > 0:
-                marketing_spend = marketing_spend * (1 + growth_rate)
-                # Recalculate new customers with updated marketing spend
-                new_customers = (marketing_spend / cac) * conversion_rate
+            # Calculate new customers from leads
+            new_customers = math.floor(leads * conversion_rate)
             
             # Apply churn to existing customers
-            churned_customers = cumulative_customers * churn_rate
+            churned_customers = math.floor(total_customers * churn_rate)
             
-            # Update cumulative customers
-            cumulative_customers = cumulative_customers + new_customers - churned_customers
+            # Update total customers
+            total_customers = max(0, total_customers + new_customers - churned_customers)
             
-            # Calculate revenue
-            revenue = cumulative_customers * arpu
+            # Calculate monthly revenue
+            monthly_revenue = total_customers * arpu
             
-            # Store monthly data
             monthly_data.append({
                 "month": month,
-                "marketing_spend": round(marketing_spend, 2),
-                "new_customers": round(new_customers, 2),
-                "churned_customers": round(churned_customers, 2),
-                "cumulative_customers": round(cumulative_customers, 2),
-                "revenue": round(revenue, 2),
+                "marketing_spend": marketing_spend,
+                "leads": leads,
+                "new_customers": new_customers,
+                "churned_customers": churned_customers,
+                "total_customers": total_customers,
+                "revenue": monthly_revenue,
                 "arpu": arpu,
                 "cac": cac,
-                "conversion_rate": conversion_rate,
-                "growth_rate": growth_rate,
-                "churn_rate": churn_rate
+                "conversion_rate": conversion_rate
             })
+            
+            total_revenue += monthly_revenue
+            total_marketing_spend += marketing_spend
+            
+            # Apply growth to marketing spend for next month
+            marketing_spend = marketing_spend * (1 + growth_rate)
         
-        return monthly_data
-    
-    def get_assumptions(self) -> Dict[str, Any]:
-        """
-        Get current assumptions used by the calculator.
-        
-        Returns:
-            Dictionary of current assumptions
-        """
         return {
-            "arpu": self.default_arpu,
-            "marketing_spend": self.default_marketing_spend,
-            "cac": self.default_cac,
-            "conversion_rate": self.default_conversion_rate,
-            "growth_rate": self.default_growth_rate,
-            "churn_rate": self.default_churn_rate
+            "forecast_type": "smb_customer",
+            "timeframe_months": months,
+            "monthly_data": monthly_data,
+            "summary": {
+                "total_revenue": total_revenue,
+                "average_monthly_revenue": total_revenue / months,
+                "total_marketing_spend": total_marketing_spend,
+                "final_customer_count": total_customers,
+                "total_customers_acquired": sum([data["new_customers"] for data in monthly_data]),
+                "total_customers_churned": sum([data["churned_customers"] for data in monthly_data]),
+                "roi": (total_revenue - total_marketing_spend) / total_marketing_spend if total_marketing_spend > 0 else 0
+            },
+            "assumptions_used": {
+                "arpu": arpu,
+                "marketing_spend": self.marketing_spend,
+                "cac": cac,
+                "conversion_rate": conversion_rate,
+                "monthly_growth_rate": growth_rate,
+                "monthly_churn_rate": churn_rate
+            }
         }
     
-    def update_assumptions(self, **kwargs) -> None:
+    def calculate_with_assumptions_override(
+        self, 
+        months: int, 
+        assumptions: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
-        Update calculator assumptions.
+        Calculate revenue with custom assumptions.
         
         Args:
-            **kwargs: Assumption overrides (arpu, marketing_spend, cac, conversion_rate, growth_rate, churn_rate)
+            months: Number of months to forecast
+            assumptions: Dictionary with assumption overrides
+            
+        Returns:
+            Dictionary with forecast results
         """
-        if "arpu" in kwargs:
-            self.default_arpu = kwargs["arpu"]
-        if "marketing_spend" in kwargs:
-            self.default_marketing_spend = kwargs["marketing_spend"]
-        if "cac" in kwargs:
-            self.default_cac = kwargs["cac"]
-        if "conversion_rate" in kwargs:
-            self.default_conversion_rate = kwargs["conversion_rate"]
-        if "growth_rate" in kwargs:
-            self.default_growth_rate = kwargs["growth_rate"]
-        if "churn_rate" in kwargs:
-            self.default_churn_rate = kwargs["churn_rate"]
+        custom_arpu = assumptions.get("smb_customer_arpu")
+        custom_marketing_spend = assumptions.get("smb_marketing_spend")
+        custom_cac = assumptions.get("smb_cac")
+        custom_conversion_rate = assumptions.get("smb_conversion_rate")
+        custom_growth = assumptions.get("smb_growth_rate")
+        custom_churn = assumptions.get("smb_churn_rate")
+        
+        return self.calculate_revenue(
+            months=months,
+            custom_arpu=custom_arpu,
+            custom_marketing_spend=custom_marketing_spend,
+            custom_cac=custom_cac,
+            custom_conversion_rate=custom_conversion_rate,
+            custom_growth_rate=custom_growth,
+            custom_churn_rate=custom_churn
+        )

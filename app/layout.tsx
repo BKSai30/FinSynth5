@@ -1,15 +1,12 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
-import { Analytics } from "@vercel/analytics/next"
-import { Suspense } from "react"
 import "./globals.css"
+import { ThemeProvider } from "./components/theme-provider"
+import { Navbar } from "./components/navbar"
 
 export const metadata: Metadata = {
   title: "FinSynth - AI Financial Forecasting",
   description: "Transform financial planning with AI-powered forecasting",
-  generator: "v0.app",
 }
 
 export default function RootLayout({
@@ -18,10 +15,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <Suspense fallback={null}>{children}</Suspense>
-        <Analytics />
+    <html lang="en" suppressHydrationWarning>
+      <body className="font-sans bg-background text-foreground">
+        <ThemeProvider
+          defaultTheme="system"
+          storageKey="finsynth-theme"
+        >
+          <Navbar />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -1,9 +1,9 @@
 """
-Configuration settings for the ASF backend.
+Configuration settings for the FinSynth Hackathon backend.
 Uses Pydantic BaseSettings to load environment variables.
 """
 
-from typing import Optional
+from typing import List, Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -27,6 +27,11 @@ class Settings(BaseSettings):
         env="SUPABASE_SERVICE_KEY",
         description="Supabase service key for server-side operations"
     )
+    supabase_jwt_secret: str = Field(
+        default="",
+        env="SUPABASE_JWT_SECRET",
+        description="Supabase JWT secret for token verification"
+    )
     
     # OpenAI API
     openai_api_key: str = Field(
@@ -35,22 +40,14 @@ class Settings(BaseSettings):
         description="OpenAI API key for GPT-4 and embeddings"
     )
     
-    
-    # Supabase Authentication (replaces JWT)
-    supabase_jwt_secret: str = Field(
-        default="",
-        env="SUPABASE_JWT_SECRET",
-        description="Supabase JWT secret for token verification"
-    )
-    
     # Application
     app_name: str = Field(
-        default="ASF Backend",
+        default="FinSynth Hackathon",
         env="APP_NAME",
         description="Application name"
     )
     debug: bool = Field(
-        default=False,
+        default=True,
         env="DEBUG",
         description="Debug mode"
     )
@@ -61,12 +58,11 @@ class Settings(BaseSettings):
     )
     
     # CORS
-    cors_origins: list[str] = Field(
+    cors_origins: List[str] = Field(
         default=["http://localhost:3000", "http://localhost:3001"],
         env="CORS_ORIGINS",
         description="Allowed CORS origins"
     )
-    
     
     # OpenAI Model Configuration
     openai_model: str = Field(
@@ -80,11 +76,38 @@ class Settings(BaseSettings):
         description="OpenAI embedding model for vector search"
     )
     
+    # Financial Model Defaults
+    large_customer_arpu: float = Field(
+        default=16667.0,
+        env="LARGE_CUSTOMER_ARPU",
+        description="Average Revenue Per User for large customers"
+    )
+    smb_customer_arpu: float = Field(
+        default=5000.0,
+        env="SMB_CUSTOMER_ARPU",
+        description="Average Revenue Per User for SMB customers"
+    )
+    smb_marketing_spend: float = Field(
+        default=200000.0,
+        env="SMB_MARKETING_SPEND",
+        description="Monthly marketing spend for SMB customers"
+    )
+    smb_cac: float = Field(
+        default=1250.0,
+        env="SMB_CAC",
+        description="Customer Acquisition Cost for SMB customers"
+    )
+    smb_conversion_rate: float = Field(
+        default=0.45,
+        env="SMB_CONVERSION_RATE",
+        description="Conversion rate for SMB customers"
+    )
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
-        extra = "ignore"  # Ignore extra environment variables
+        extra = "ignore"
 
 
 # Global settings instance

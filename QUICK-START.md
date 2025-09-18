@@ -1,110 +1,87 @@
-# ⚡ FinSynth Quick Start
+# 🚀 FinSynth Hackathon - Quick Start Guide
 
-## 🚨 Prerequisites Check
+## ⚡ **5-Minute Setup**
 
-Before running FinSynth, you need these installed:
+### **Step 1: Prerequisites**
+- Python 3.10+ installed
+- Node.js 18+ installed
+- Supabase account (free)
+- OpenAI API key
 
-- ✅ **Python 3.11+** - [Download here](https://www.python.org/downloads/)
-- ✅ **Node.js 18+** - [Download here](https://nodejs.org/)
-- ✅ **PostgreSQL 15+** - [Download here](https://www.postgresql.org/download/windows/)
-- ✅ **Redis** - [Download here](https://github.com/microsoftarchive/redis/releases)
-
-## 🏃‍♂️ 5-Minute Setup
-
-### Step 1: Install Prerequisites
+### **Step 2: Setup**
 ```bash
-# Check if you have them installed
-python --version
-node --version
-psql --version
-redis-server --version
+# Run the setup script
+setup.bat
 ```
 
-If any command fails, install the missing software using the links above.
+### **Step 3: Configure Environment**
+1. Edit `.env` file with your API keys:
+   ```bash
+   SUPABASE_URL=https://your-project-id.supabase.co
+   SUPABASE_ANON_KEY=your-supabase-anon-key
+   SUPABASE_SERVICE_KEY=your-supabase-service-key
+   OPENAI_API_KEY=your-openai-api-key
+   ```
 
-### Step 2: Create Environment File
-Create `.env` file in project root:
+### **Step 4: Setup Supabase Database**
+1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
+2. Create new project
+3. Go to SQL Editor
+4. Copy and run the SQL from `supabase-schema.sql`
 
-```env
-DATABASE_URL=postgresql+asyncpg://asf_user:password@localhost:5432/asf_db
-OPENAI_API_KEY=your-openai-api-key-here
-REDIS_URL=redis://localhost:6379/0
-CELERY_BROKER_URL=redis://localhost:6379/1
-CELERY_RESULT_BACKEND=redis://localhost:6379/2
-JWT_SECRET=your-secret-key-change-in-production-12345
-JWT_ALGORITHM=HS256
-JWT_EXPIRE_MINUTES=30
-APP_NAME=ASF Backend
-DEBUG=true
-ENVIRONMENT=development
-CORS_ORIGINS=["http://localhost:3000", "http://localhost:3001"]
-OPENAI_MODEL=gpt-4-turbo-preview
-OPENAI_EMBEDDING_MODEL=text-embedding-3-small
-```
-
-### Step 3: Set Up Database
+### **Step 5: Start Application**
 ```bash
-# Connect to PostgreSQL
-psql -U postgres
-
-# Run these commands:
-CREATE DATABASE asf_db;
-CREATE USER asf_user WITH PASSWORD 'password';
-GRANT ALL PRIVILEGES ON DATABASE asf_db TO asf_user;
-\c asf_db
-CREATE EXTENSION IF NOT EXISTS vector;
-\q
-```
-
-### Step 4: Install Dependencies
-```bash
-pip install -r requirements.txt
-npm install
-```
-
-### Step 5: Start Services
-```bash
-# Run the startup script
+# Start both frontend and backend
 start.bat
-
-# Or manually in separate terminals:
-# Terminal 1: redis-server
-# Terminal 2: celery -A backend.workers.celery_app worker --loglevel=info
-# Terminal 3: python -m backend.main
-# Terminal 4: npm run dev
 ```
 
-## 🎯 Access Your App
-
+### **Step 6: Access Application**
 - **Frontend**: http://localhost:3000
-- **Backend**: http://localhost:8000
+- **Backend API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
 
-## 🧪 Test It Out
+## 🎯 **Test the Application**
 
-Try these queries in the frontend:
+1. **Register/Login** at http://localhost:3000
+2. **Try these sample queries**:
+   - "Show me revenue for the next 12 months"
+   - "What if we increase marketing spend by 20%?"
+   - "Forecast large customer revenue for 6 months"
+   - "Explain the current assumptions"
 
-1. **"Show me revenue for the next 6 months"**
-2. **"What if we increase marketing spend by 20%?"**
-3. **"Forecast large customer revenue for 12 months"**
-4. **"Explain the current assumptions"**
+## 🔧 **Troubleshooting**
 
-## 🆘 Need Help?
+### **Backend Issues**
+- Check if `.env` file exists and has correct values
+- Ensure virtual environment is activated
+- Verify Supabase credentials
 
-If you run into issues:
+### **Frontend Issues**
+- Run `npm install` to install dependencies
+- Check if backend is running on port 8000
+- Clear browser cache
 
-1. **Check the full installation guide**: `INSTALLATION-GUIDE.md`
-2. **Verify all prerequisites are installed**
-3. **Make sure all services are running**
-4. **Check the .env file is created correctly**
+### **Database Issues**
+- Verify Supabase project is active
+- Check if schema is properly set up
+- Ensure RLS policies are configured
 
-## 🎉 You're Done!
+## 📱 **Features to Demo**
 
-Your FinSynth AI financial forecasting platform is now running! 
+- ✅ **3D Animated Homepage** with Three.js
+- ✅ **Natural Language Queries** with AI processing
+- ✅ **Real-time Financial Forecasts** with detailed breakdowns
+- ✅ **Dark/Light Mode** with smooth transitions
+- ✅ **Responsive Design** for all devices
+- ✅ **Professional UI/UX** with modern animations
 
-The app will:
-- ✅ Parse your natural language queries
-- ✅ Generate financial forecasts using AI
-- ✅ Show real-time progress updates
-- ✅ Create beautiful charts and tables
-- ✅ Export professional Excel reports
+## 🏆 **Hackathon Ready**
+
+This is a complete, working solution ready for hackathon presentation with:
+- Professional UI with 3D animations
+- AI-powered natural language processing
+- Real-time financial forecasting
+- Secure authentication
+- Comprehensive documentation
+
+**Ready to impress the judges! 🚀**

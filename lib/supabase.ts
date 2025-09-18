@@ -6,10 +6,16 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Auth helpers
-export const signUp = async (email: string, password: string) => {
+export const signUp = async (email: string, password: string, fullName?: string) => {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: {
+        full_name: fullName || '',
+        app_name: 'FinSynth Hackathon'
+      }
+    }
   })
   return { data, error }
 }

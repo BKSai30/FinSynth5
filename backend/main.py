@@ -1,22 +1,21 @@
 """
-Main FastAPI application for the ASF (Autonomous Strategic Finance) backend.
-Implements the complete API server as specified in the PRD.
+FinSynth Hackathon - AI-Powered Financial Forecasting Platform
+Main FastAPI application with Supabase integration
 """
 
 from contextlib import asynccontextmanager
 from datetime import datetime
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 import os
+import uvicorn
 
 from .core.config import settings
 from .core.database import init_db, close_db
-from .core.socketio import create_socketio_app, sio
-from .models.forecast import HealthResponse
-from .routers import forecast
-from .services.vector_service import VectorService
+from .routers import auth, forecast
+from .services.knowledge_service import KnowledgeService
 
 
 @asynccontextmanager
@@ -27,7 +26,7 @@ async def lifespan(app: FastAPI):
     """
     # Startup
     print(f"🚀 Starting {settings.app_name} in {settings.environment} mode")
-    print(f"📊 Database URL: {settings.database_url}")
+    print(f"📊 Supabase URL: {settings.supabase_url}")
     print(f"🤖 OpenAI Model: {settings.openai_model}")
     
     # Initialize database
@@ -35,17 +34,16 @@ async def lifespan(app: FastAPI):
         await init_db()
         print("✅ Database initialized successfully")
         
-        # Initialize vector service and knowledge base
-        vector_service = VectorService()
-        from .core.database import get_session
-        async for session in get_session():
-            await vector_service.initialize_knowledge_base(session)
-            break
-        print("✅ Vector knowledge base initialized successfully")
+        # Initialize knowledge service
+        knowledge_service = KnowledgeService()
+        await knowledge_service.initialize_knowledge_base()
+        print("✅ Knowledge base initialized successfully")
         
     except Exception as e:
-        print(f"❌ Database initialization failed: {e}")
-        raise
+        print(f"❌ Initialization failed: {e}")
+        # Don't raise in development mode
+        if not settings.debug:
+            raise
     
     # Create storage directory
     os.makedirs("storage", exist_ok=True)
@@ -61,7 +59,7 @@ async def lifespan(app: FastAPI):
 # Create FastAPI application
 app = FastAPI(
     title=settings.app_name,
-    description="AI-powered financial forecasting platform",
+    description="AI-powered financial forecasting platform for hackathon",
     version="1.0.0",
     debug=settings.debug,
     lifespan=lifespan
@@ -77,7 +75,8 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(forecast.router, prefix="/api/v1")
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(forecast.router, prefix="/api/v1/forecast", tags=["Forecasting"])
 
 # Mount static files for Excel reports
 app.mount("/storage", StaticFiles(directory="storage"), name="storage")
@@ -89,25 +88,34 @@ async def root():
     Root endpoint with API information.
     """
     return {
-        "message": "ASF Backend API",
+        "message": "FinSynth Hackathon API",
         "version": "1.0.0",
         "status": "running",
         "timestamp": datetime.utcnow().isoformat(),
         "docs_url": "/docs",
-        "health_url": "/health"
+        "health_url": "/health",
+        "features": [
+            "AI-powered financial forecasting",
+            "Natural language query processing",
+            "Supabase authentication",
+            "Real-time WebSocket updates",
+            "Excel report generation"
+        ]
     }
 
 
-@app.get("/health", response_model=HealthResponse)
+@app.get("/health")
 async def health_check():
     """
-    Health check endpoint for monitoring and load balancers.
+    Health check endpoint for monitoring.
     """
-    return HealthResponse(
-        status="healthy",
-        timestamp=datetime.utcnow(),
-        version="1.0.0"
-    )
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": "1.0.0",
+        "environment": settings.environment,
+        "debug": settings.debug
+    }
 
 
 @app.exception_handler(HTTPException)
@@ -142,13 +150,8 @@ async def general_exception_handler(request, exc):
 
 
 if __name__ == "__main__":
-    import uvicorn
-    
-    # Create Socket.IO app
-    socketio_app = create_socketio_app(app)
-    
     uvicorn.run(
-        socketio_app,
+        "backend.main:app",
         host="0.0.0.0",
         port=8000,
         reload=settings.debug,

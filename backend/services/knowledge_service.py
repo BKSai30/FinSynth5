@@ -1,157 +1,188 @@
 """
-Knowledge Service for retrieving relevant business context.
-Uses vector embeddings and semantic search as specified in the PRD.
+Knowledge Service for AI-powered query processing.
+Handles natural language understanding and knowledge retrieval.
 """
 
-from typing import Dict, Any, List
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from .vector_service import VectorService
+from typing import Dict, Any, List, Optional
+import openai
+import json
+from ..core.config import settings
+from ..core.database import db
 
 
 class KnowledgeService:
     """
-    Service for retrieving relevant business knowledge and assumptions.
-    
-    In the full implementation, this would:
-    1. Generate embeddings for knowledge base chunks
-    2. Store embeddings in pgvector database
-    3. Perform semantic search on user queries
-    4. Return most relevant context chunks
+    Service for AI-powered knowledge processing and query understanding.
     """
     
     def __init__(self):
-        """Initialize with vector service for semantic search."""
-        self.vector_service = VectorService()
-        self.knowledge_base = self._load_knowledge_base()
+        """Initialize OpenAI client."""
+        self.client = openai.OpenAI(api_key=settings.openai_api_key)
+        self.model = settings.openai_model
     
-    def _load_knowledge_base(self) -> str:
+    async def initialize_knowledge_base(self) -> None:
         """
-        Load hardcoded knowledge base with business logic and assumptions.
-        This represents the financial model knowledge that would be vectorized.
+        Initialize the knowledge base with default financial model information.
         """
-        return """
-        # ASF Financial Model Knowledge Base
+        # Default knowledge base chunks for the hackathon
+        default_chunks = [
+            {
+                "id": "revenue_model_large",
+                "content": "Large customer revenue model: Default ARPU $16,667 per month, onboarding ramp [1,1,2,2,3,4,5,6,7,8,9] customers per month, 5% monthly growth after onboarding, 2% monthly churn rate.",
+                "metadata": {"category": "revenue_model", "business_unit": "large_customer"}
+            },
+            {
+                "id": "revenue_model_smb",
+                "content": "SMB customer revenue model: Default ARPU $5,000 per month, $200,000 monthly marketing spend, $1,250 CAC, 45% conversion rate, 3% monthly growth, 5% monthly churn rate.",
+                "metadata": {"category": "revenue_model", "business_unit": "smb_customer"}
+            },
+            {
+                "id": "forecast_types",
+                "content": "Supported forecast types: forecast_total_revenue (combined large + SMB), forecast_large_revenue (enterprise only), forecast_smb_revenue (SMB only), explain_assumptions (return current assumptions).",
+                "metadata": {"category": "forecast_types"}
+            },
+            {
+                "id": "assumption_overrides",
+                "content": "Users can override assumptions by specifying new values in queries. Common overrides: marketing spend increases/decreases, ARPU changes, CAC adjustments, conversion rate modifications.",
+                "metadata": {"category": "assumptions"}
+            },
+            {
+                "id": "timeframes",
+                "content": "Default forecast period is 12 months. Supported ranges: 1-36 months. All forecasts use monthly granularity.",
+                "metadata": {"category": "timeframes"}
+            }
+        ]
         
-        ## Business Units
-        - **Large Customers**: Enterprise clients with high ARPU
-        - **SMB Customers**: Small and medium business clients with lower ARPU
-        
-        ## Revenue Model
-        ### Large Customer Revenue
-        - **Default ARPU**: $16,667 per month
-        - **Onboarding Ramp**: [1, 1, 2, 2, 3, 4, 5, 6, 7, 8, 9] customers per month
-        - **Growth Rate**: 5% monthly growth after onboarding period
-        - **Churn Rate**: 2% monthly churn
-        
-        ### SMB Customer Revenue
-        - **Default ARPU**: $5,000 per month
-        - **Marketing Spend**: $200,000 per month
-        - **Customer Acquisition Cost (CAC)**: $1,250
-        - **Conversion Rate**: 45%
-        - **Growth Rate**: 3% monthly growth
-        - **Churn Rate**: 5% monthly churn
-        
-        ## Key Metrics
-        - **Total Revenue**: Large Customer Revenue + SMB Customer Revenue
-        - **Customer Acquisition**: Marketing Spend / CAC
-        - **Monthly Growth**: Applied to existing customer base
-        
-        ## Assumption Overrides
-        Users can override any assumption by specifying new values in their query.
-        Common overrides include:
-        - Marketing spend increases/decreases
-        - ARPU changes
-        - CAC adjustments
-        - Conversion rate modifications
-        
-        ## Forecast Types
-        1. **Total Revenue Forecast**: Combined revenue from both business units
-        2. **Large Customer Forecast**: Revenue from enterprise clients only
-        3. **SMB Customer Forecast**: Revenue from small/medium business clients only
-        4. **Assumption Analysis**: Explain current assumptions and their impact
-        
-        ## Timeframes
-        - Default forecast period: 12 months
-        - Supported ranges: 1-36 months
-        - Monthly granularity for all forecasts
-        """
+        # Store default chunks in database
+        for chunk in default_chunks:
+            try:
+                await db.create("knowledge_chunks", chunk)
+            except Exception as e:
+                print(f"Warning: Could not store knowledge chunk {chunk['id']}: {e}")
     
-    async def get_relevant_context(self, user_query: str, session: AsyncSession = None) -> str:
+    async def parse_query(self, query: str) -> Dict[str, Any]:
         """
-        Get relevant business context for a user query using semantic search.
+        Parse natural language query using OpenAI to extract intent and parameters.
         
         Args:
-            user_query: Natural language query from user
-            session: Database session for vector search
+            query: Natural language financial query
             
         Returns:
-            Relevant knowledge base context from semantic search
+            Dictionary with parsed intent and parameters
         """
+        system_prompt = """
+        You are a financial forecasting AI assistant for a SaaS company. 
+        Parse the user's natural language query and extract the following information:
+        
+        1. forecast_type: One of ["forecast_total_revenue", "forecast_large_revenue", "forecast_smb_revenue", "explain_assumptions"]
+        2. timeframe_months: Number of months to forecast (default 12)
+        3. assumption_overrides: Any specific assumptions the user wants to change
+        
+        The company has two business units:
+        - Large customers: ARPU $16,667/month, onboarding ramp, 5% growth, 2% churn
+        - SMB customers: ARPU $5,000/month, $200K marketing spend, $1,250 CAC, 45% conversion, 3% growth, 5% churn
+        
+        Return a JSON object with the parsed information.
+        """
+        
+        user_prompt = f"""
+        Parse this financial query: "{query}"
+        
+        Return only a valid JSON object with:
+        - forecast_type: string
+        - timeframe_months: number
+        - assumption_overrides: object (if any)
+        """
+        
         try:
-            # Perform semantic search using vector service
-            similar_chunks = await self.vector_service.search_similar_chunks(
-                user_query, 
-                limit=3, 
-                session=session
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.1,
+                max_tokens=500
             )
             
-            # Combine relevant chunks into context
-            if similar_chunks:
-                context_parts = []
-                for chunk in similar_chunks:
-                    context_parts.append(f"**{chunk['metadata'].get('category', 'General')}**: {chunk['content']}")
-                
-                return "\n\n".join(context_parts)
-            else:
-                # Fallback to full knowledge base if no similar chunks found
-                return self.knowledge_base
-                
+            # Parse the JSON response
+            content = response.choices[0].message.content.strip()
+            
+            # Clean up the response (remove markdown formatting if present)
+            if content.startswith("```json"):
+                content = content[7:]
+            if content.endswith("```"):
+                content = content[:-3]
+            
+            parsed_result = json.loads(content)
+            
+            # Validate and set defaults
+            if "forecast_type" not in parsed_result:
+                parsed_result["forecast_type"] = "forecast_total_revenue"
+            if "timeframe_months" not in parsed_result:
+                parsed_result["timeframe_months"] = 12
+            if "assumption_overrides" not in parsed_result:
+                parsed_result["assumption_overrides"] = {}
+            
+            return parsed_result
+            
         except Exception as e:
-            # Fallback to full knowledge base on error
-            print(f"Vector search failed: {e}")
-            return self.knowledge_base
+            print(f"Error parsing query: {e}")
+            # Return default values if parsing fails
+            return {
+                "forecast_type": "forecast_total_revenue",
+                "timeframe_months": 12,
+                "assumption_overrides": {}
+            }
     
-    async def get_assumptions(self) -> Dict[str, Any]:
+    async def search_knowledge_base(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
         """
-        Get current default assumptions for calculations.
+        Search the knowledge base for relevant information.
+        
+        Args:
+            query: Search query
+            limit: Maximum number of results
+            
+        Returns:
+            List of relevant knowledge chunks
+        """
+        try:
+            # For now, return all chunks (simplified implementation)
+            chunks = await db.get_all("knowledge_chunks", limit=limit)
+            return chunks
+        except Exception as e:
+            print(f"Error searching knowledge base: {e}")
+            return []
+    
+    async def explain_assumptions(self) -> Dict[str, Any]:
+        """
+        Return current financial model assumptions.
         
         Returns:
-            Dictionary of default assumptions
+            Dictionary with all current assumptions
         """
         return {
             "large_customer": {
-                "arpu": 16667,
+                "arpu": settings.large_customer_arpu,
                 "onboarding_ramp": [1, 1, 2, 2, 3, 4, 5, 6, 7, 8, 9],
-                "growth_rate": 0.05,
-                "churn_rate": 0.02
+                "monthly_growth_rate": 0.05,
+                "monthly_churn_rate": 0.02
             },
             "smb_customer": {
-                "arpu": 5000,
-                "marketing_spend": 200000,
-                "cac": 1250,
-                "conversion_rate": 0.45,
-                "growth_rate": 0.03,
-                "churn_rate": 0.05
+                "arpu": settings.smb_customer_arpu,
+                "marketing_spend": settings.smb_marketing_spend,
+                "cac": settings.smb_cac,
+                "conversion_rate": settings.smb_conversion_rate,
+                "monthly_growth_rate": 0.03,
+                "monthly_churn_rate": 0.05
+            },
+            "defaults": {
+                "forecast_period_months": 12,
+                "supported_forecast_types": [
+                    "forecast_total_revenue",
+                    "forecast_large_revenue", 
+                    "forecast_smb_revenue",
+                    "explain_assumptions"
+                ]
             }
         }
-    
-    async def update_assumptions(self, overrides: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Update assumptions with user overrides.
-        
-        Args:
-            overrides: Dictionary of assumption overrides from parsed query
-            
-        Returns:
-            Updated assumptions dictionary
-        """
-        assumptions = await self.get_assumptions()
-        
-        # Apply overrides
-        if "large" in overrides:
-            assumptions["large_customer"].update(overrides["large"])
-        if "smb" in overrides:
-            assumptions["smb_customer"].update(overrides["smb"])
-            
-        return assumptions

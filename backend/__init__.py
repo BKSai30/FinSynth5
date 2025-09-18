@@ -1,1 +1,1 @@
-# Backend package for Autonomous Strategic Finance (ASF)
+# FinSynth Hackathon Backend Package

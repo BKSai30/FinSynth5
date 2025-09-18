@@ -1,27 +1,20 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
-import { Analytics } from "@vercel/analytics/next"
-import { Suspense } from "react"
-import "./globals.css"
+import type { Metadata } from 'next'
+import './globals.css'
 
 export const metadata: Metadata = {
-  title: "FinSynth - AI Financial Forecasting",
-  description: "Transform financial planning with AI-powered forecasting",
-  generator: "v0.app",
+  title: 'FinSynth Hackathon - AI-Powered Financial Forecasting',
+  description: 'Transform financial planning with AI-powered forecasting. Ask questions, get insights.',
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
-    <html lang="en" className="dark">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <Suspense fallback={null}>{children}</Suspense>
-        <Analytics />
+    <html lang="en">
+      <body>
+        {children}
       </body>
     </html>
   )

@@ -1,123 +1,127 @@
 """
-Large Customer Calculator for enterprise client revenue forecasting.
-Implements the business logic as specified in the PRD.
-Pure Python calculations - no LLM involvement in math.
+Large Customer Revenue Calculator
+Implements the financial model for large enterprise customers.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, List
+from datetime import datetime, timedelta
+import math
 
 
 class LargeCustomerCalculator:
     """
-    Calculator for large customer (enterprise) revenue forecasting.
+    Calculator for large customer revenue forecasting.
     
-    Implements the business logic from the PRD:
-    - Default ARPU: $16,667 per month
-    - Onboarding ramp: [1, 1, 2, 2, 3, 4, 5, 6, 7, 8, 9] customers per month
-    - Growth rate: 5% monthly after onboarding period
+    Model assumptions:
+    - ARPU: $16,667 per month per customer
+    - Onboarding ramp: [1,1,2,2,3,4,5,6,7,8,9] customers per month
+    - Monthly growth: 5% after onboarding
     - Churn rate: 2% monthly
     """
     
-    def __init__(self, default_arpu: float = 16667):
-        """
-        Initialize calculator with default assumptions.
-        
-        Args:
-            default_arpu: Default Average Revenue Per User for large customers
-        """
-        self.default_arpu = default_arpu
-        self.onboarding_ramp = [1, 1, 2, 2, 3, 4, 5, 6, 7, 8, 9]  # M1, M2, ..., M11
-        self.default_growth_rate = 0.05  # 5% monthly growth
-        self.default_churn_rate = 0.02   # 2% monthly churn
+    def __init__(self, arpu: float = 16667.0):
+        self.arpu = arpu
+        self.onboarding_ramp = [1, 1, 2, 2, 3, 4, 5, 6, 7, 8, 9]
+        self.monthly_growth_rate = 0.05
+        self.monthly_churn_rate = 0.02
     
-    def calculate(
+    def calculate_revenue(
         self, 
-        timeframe_months: int, 
-        arpu: Optional[float] = None,
-        growth_rate: Optional[float] = None,
-        churn_rate: Optional[float] = None
-    ) -> List[Dict[str, Any]]:
+        months: int = 12, 
+        custom_arpu: float = None,
+        custom_growth_rate: float = None,
+        custom_churn_rate: float = None
+    ) -> Dict[str, Any]:
         """
-        Calculate monthly revenue for large customers.
+        Calculate large customer revenue forecast.
         
         Args:
-            timeframe_months: Number of months to forecast
-            arpu: Override ARPU (defaults to self.default_arpu)
-            growth_rate: Override growth rate (defaults to self.default_growth_rate)
-            churn_rate: Override churn rate (defaults to self.default_churn_rate)
+            months: Number of months to forecast
+            custom_arpu: Override default ARPU
+            custom_growth_rate: Override default growth rate
+            custom_churn_rate: Override default churn rate
             
         Returns:
-            List of monthly data dictionaries with revenue, customers, and metadata
+            Dictionary with monthly data and summary
         """
-        # Use provided values or defaults
-        arpu = arpu or self.default_arpu
-        growth_rate = growth_rate or self.default_growth_rate
-        churn_rate = churn_rate or self.default_churn_rate
+        # Use custom values if provided
+        arpu = custom_arpu or self.arpu
+        growth_rate = custom_growth_rate or self.monthly_growth_rate
+        churn_rate = custom_churn_rate or self.monthly_churn_rate
         
         monthly_data = []
-        cumulative_customers = 0
+        total_customers = 0
+        total_revenue = 0
         
-        for month in range(1, timeframe_months + 1):
+        for month in range(1, months + 1):
             # Calculate new customers for this month
             if month <= len(self.onboarding_ramp):
-                # Use onboarding ramp
                 new_customers = self.onboarding_ramp[month - 1]
             else:
-                # Apply growth rate to previous month's new customers
-                if month == len(self.onboarding_ramp) + 1:
-                    # First month after onboarding ramp
-                    new_customers = self.onboarding_ramp[-1] * (1 + growth_rate)
-                else:
-                    # Continue growth from previous month
-                    new_customers = monthly_data[-1]["new_customers"] * (1 + growth_rate)
+                # After onboarding, use growth rate
+                new_customers = math.ceil(total_customers * growth_rate)
             
             # Apply churn to existing customers
-            churned_customers = cumulative_customers * churn_rate
+            churned_customers = math.floor(total_customers * churn_rate)
             
-            # Update cumulative customers
-            cumulative_customers = cumulative_customers + new_customers - churned_customers
+            # Update total customers
+            total_customers = max(0, total_customers + new_customers - churned_customers)
             
-            # Calculate revenue
-            revenue = cumulative_customers * arpu
+            # Calculate monthly revenue
+            monthly_revenue = total_customers * arpu
             
-            # Store monthly data
             monthly_data.append({
                 "month": month,
-                "new_customers": round(new_customers, 2),
-                "churned_customers": round(churned_customers, 2),
-                "cumulative_customers": round(cumulative_customers, 2),
-                "revenue": round(revenue, 2),
-                "arpu": arpu,
-                "growth_rate": growth_rate,
-                "churn_rate": churn_rate
+                "new_customers": new_customers,
+                "churned_customers": churned_customers,
+                "total_customers": total_customers,
+                "revenue": monthly_revenue,
+                "arpu": arpu
             })
+            
+            total_revenue += monthly_revenue
         
-        return monthly_data
-    
-    def get_assumptions(self) -> Dict[str, Any]:
-        """
-        Get current assumptions used by the calculator.
-        
-        Returns:
-            Dictionary of current assumptions
-        """
         return {
-            "arpu": self.default_arpu,
-            "onboarding_ramp": self.onboarding_ramp,
-            "growth_rate": self.default_growth_rate,
-            "churn_rate": self.default_churn_rate
+            "forecast_type": "large_customer",
+            "timeframe_months": months,
+            "monthly_data": monthly_data,
+            "summary": {
+                "total_revenue": total_revenue,
+                "average_monthly_revenue": total_revenue / months,
+                "final_customer_count": total_customers,
+                "total_customers_acquired": sum([data["new_customers"] for data in monthly_data]),
+                "total_customers_churned": sum([data["churned_customers"] for data in monthly_data])
+            },
+            "assumptions_used": {
+                "arpu": arpu,
+                "onboarding_ramp": self.onboarding_ramp,
+                "monthly_growth_rate": growth_rate,
+                "monthly_churn_rate": churn_rate
+            }
         }
     
-    def update_assumptions(self, **kwargs) -> None:
+    def calculate_with_assumptions_override(
+        self, 
+        months: int, 
+        assumptions: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
-        Update calculator assumptions.
+        Calculate revenue with custom assumptions.
         
         Args:
-            **kwargs: Assumption overrides (arpu, growth_rate, churn_rate)
+            months: Number of months to forecast
+            assumptions: Dictionary with assumption overrides
+            
+        Returns:
+            Dictionary with forecast results
         """
-        if "arpu" in kwargs:
-            self.default_arpu = kwargs["arpu"]
-        if "growth_rate" in kwargs:
-            self.default_growth_rate = kwargs["growth_rate"]
-        if "churn_rate" in kwargs:
-            self.default_churn_rate = kwargs["churn_rate"]
+        custom_arpu = assumptions.get("large_customer_arpu")
+        custom_growth = assumptions.get("large_customer_growth_rate")
+        custom_churn = assumptions.get("large_customer_churn_rate")
+        
+        return self.calculate_revenue(
+            months=months,
+            custom_arpu=custom_arpu,
+            custom_growth_rate=custom_growth,
+            custom_churn_rate=custom_churn
+        )

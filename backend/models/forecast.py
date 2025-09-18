@@ -5,7 +5,7 @@ Uses SQLModel for type-safe database operations with automatic API generation.
 
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, JSON, Column
 
 
 class User(SQLModel, table=True):
@@ -26,7 +26,7 @@ class ForecastQuery(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: str = Field(foreign_key="user.id", index=True)  # Changed to string for Supabase UUID
     query_text: str = Field(max_length=2000)
-    parsed_intent: Dict[str, Any] = Field(default_factory=dict)  # JSON field
+    parsed_intent: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))  # JSON field
     status: str = Field(default="pending", max_length=50)  # pending, processing, completed, failed
     created_at: datetime = Field(default_factory=datetime.utcnow)
     completed_at: Optional[datetime] = Field(default=None)
@@ -41,9 +41,9 @@ class ForecastResult(SQLModel, table=True):
     
     id: Optional[int] = Field(default=None, primary_key=True)
     query_id: int = Field(foreign_key="forecastquery.id", index=True)
-    result: Dict[str, Any] = Field(default_factory=dict)  # JSON field with forecast data
-    assumptions_used: Dict[str, Any] = Field(default_factory=dict)  # JSON field with assumptions
-    calculation_metadata: Dict[str, Any] = Field(default_factory=dict)  # JSON field with metadata
+    result: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))  # JSON field with forecast data
+    assumptions_used: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))  # JSON field with assumptions
+    calculation_metadata: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))  # JSON field with metadata
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
     # Relationships
