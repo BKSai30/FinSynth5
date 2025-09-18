@@ -36,7 +36,7 @@ export default function ForecastPage() {
       if (!userData) return
       
       const user = JSON.parse(userData)
-      const response = await fetch(`http://localhost:8001/api/v1/auth/company-data?email=${encodeURIComponent(user.email)}`)
+      const response = await fetch(`http://localhost:8003/api/v1/auth/company-data?email=${encodeURIComponent(user.email)}`)
       
       if (response.ok) {
         const data = await response.json()
@@ -74,7 +74,7 @@ export default function ForecastPage() {
       formData.append('file', file)
       formData.append('email', user.email)
 
-      const response = await fetch('http://localhost:8001/api/v1/upload-company-data', {
+        const response = await fetch('http://localhost:8003/api/v1/upload-company-data', {
         method: 'POST',
         body: formData,
       })
@@ -133,7 +133,7 @@ export default function ForecastPage() {
       
       console.log('Sending forecast request with company data:', dataToSend)
       
-      const response = await fetch('http://localhost:8001/api/v1/forecast', {
+      const response = await fetch('http://localhost:8003/api/v1/forecast', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

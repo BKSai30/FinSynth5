@@ -26,7 +26,7 @@ export default function LoginPage() {
     try {
       if (isLogin) {
         // Login
-        const response = await fetch('http://localhost:8001/api/v1/auth/login', {
+        const response = await fetch('http://localhost:8003/api/v1/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -44,7 +44,7 @@ export default function LoginPage() {
         
         // Fetch company data for existing users
         try {
-          const companyResponse = await fetch(`http://localhost:8001/api/v1/auth/company-data?email=${encodeURIComponent(user.email)}`)
+          const companyResponse = await fetch(`http://localhost:8003/api/v1/auth/company-data?email=${encodeURIComponent(user.email)}`)
           if (companyResponse.ok) {
             const companyData = await companyResponse.json()
             user.company_data = companyData.company_data
@@ -71,7 +71,7 @@ export default function LoginPage() {
           }
         }
         
-        const response = await fetch('http://localhost:8001/api/v1/auth/register', {
+        const response = await fetch('http://localhost:8003/api/v1/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

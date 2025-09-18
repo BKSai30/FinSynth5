@@ -19,9 +19,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Supabase configuration
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://gavrdclfnuhjtjsgjlq.supabase.co")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhdnJkY2xmbnVodGp0c2dqbGpxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODE4NjAzNiwiZXhwIjoyMDczNzYyMDM2fQ._-IhpBQ1zYIV-kacmjawBIm3gvp7C6mXRIHbcRSb3Kc")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "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")
 
 # Initialize Supabase client
 try:
@@ -51,7 +51,7 @@ except Exception as e:
 # Initialize Anthropic Claude client
 try:
     import anthropic
-    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "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")
     claude_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     CLAUDE_CONNECTED = True
     print("✅ Anthropic Claude connected successfully")
@@ -71,7 +71,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -344,6 +344,9 @@ def parse_query_for_assumptions(query: str, company_data: Dict[str, Any]) -> Dic
         (r'(\d+)\s*years?', lambda m: int(m.group(1)) * 12),
         (r'next\s*(\d+)\s*months?', lambda m: int(m.group(1))),
         (r'next\s*(\d+)\s*years?', lambda m: int(m.group(1)) * 12),
+        (r'over\s*the\s*next\s*(\d+)\s*years?', lambda m: int(m.group(1)) * 12),
+        (r'over\s*the\s*next\s*(\d+)\s*months?', lambda m: int(m.group(1))),
+        (r'over\s*the\s*next\s*year', lambda m: 12),
         (r'(\d+)\s*month', lambda m: int(m.group(1))),
         (r'(\d+)\s*year', lambda m: int(m.group(1)) * 12),
         (r'quarterly', lambda m: 3),
@@ -406,6 +409,7 @@ def parse_query_for_assumptions(query: str, company_data: Dict[str, Any]) -> Dic
     
     if "reduce" in query_lower and ("cost" in query_lower or "expense" in query_lower):
         reduction_patterns = [
+            (r'reduce.*?costs?\s*by\s*(\d+)%', lambda m: 1 - (int(m.group(1)) / 100)),
             (r'reduce.*?(\d+)%', lambda m: 1 - (int(m.group(1)) / 100)),
             (r'(\d+)%\s*reduction', lambda m: 1 - (int(m.group(1)) / 100)),
             (r'cut.*?(\d+)%', lambda m: 1 - (int(m.group(1)) / 100))
@@ -868,7 +872,7 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="127.0.0.1",
-        port=8001,
+        port=8003,
         reload=False,
         log_level="info"
     )
