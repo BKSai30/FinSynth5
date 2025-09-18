@@ -4,17 +4,15 @@ Implements the main forecast endpoint as specified in the PRD.
 """
 
 from typing import Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
-
-from ..core.database import get_session
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from ..core.database import db
+from ..core.auth import get_current_active_user
 from ..models.forecast import ForecastRequest, ForecastResponse, ForecastQuery, ForecastResult
 from ..services.knowledge_service import KnowledgeService
 from ..services.query_parser import QueryParser
 from ..services.calculators.large_customer_calculator import LargeCustomerCalculator
 from ..services.calculators.smb_calculator import SMBCalculator
-from ..workers.tasks import generate_excel_report
+from ..services.background_tasks import generate_excel_report
 
 
 router = APIRouter(prefix="/forecast", tags=["forecast"])
@@ -29,7 +27,7 @@ smb_calculator = SMBCalculator()
 @router.post("/", response_model=ForecastResponse)
 async def create_forecast(
     request: ForecastRequest,
-    session: AsyncSession = Depends(get_session)
+    current_user: Dict[str, Any] = Depends(get_current_active_user)
 ) -> ForecastResponse:
     """
     Create a new financial forecast based on natural language query.
@@ -60,37 +58,35 @@ async def create_forecast(
         parsed_intent = await query_parser.parse_query(request.query, knowledge_context)
         
         # Step 3: Create forecast query record
-        forecast_query = ForecastQuery(
-            query_text=request.query,
-            parsed_intent=parsed_intent,
-            status="processing"
-        )
-        session.add(forecast_query)
-        await session.commit()
-        await session.refresh(forecast_query)
+        forecast_query_data = {
+            "user_id": current_user["id"],
+            "query_text": request.query,
+            "parsed_intent": parsed_intent,
+            "status": "processing"
+        }
+        forecast_query = await db.create("forecastquery", forecast_query_data)
         
         # Step 4: Execute calculations based on intent
         result_data, assumptions_used = await _execute_calculation(parsed_intent)
         
         # Step 5: Create forecast result record
-        forecast_result = ForecastResult(
-            query_id=forecast_query.id,
-            result=result_data,
-            assumptions_used=assumptions_used,
-            calculation_metadata={
+        forecast_result_data = {
+            "query_id": forecast_query["id"],
+            "result": result_data,
+            "assumptions_used": assumptions_used,
+            "calculation_metadata": {
                 "intent": parsed_intent["intent"],
                 "timeframe_months": parsed_intent["timeframe_months"],
                 "calculator_version": "1.0.0"
             }
-        )
-        session.add(forecast_result)
+        }
+        await db.create("forecastresult", forecast_result_data)
         
         # Step 6: Update query status
-        forecast_query.status = "completed"
-        await session.commit()
+        await db.update("forecastquery", forecast_query["id"], {"status": "completed"})
         
         return ForecastResponse(
-            query_id=forecast_query.id,
+            query_id=forecast_query["id"],
             status="completed",
             result=result_data,
             assumptions_used=assumptions_used,
@@ -100,8 +96,7 @@ async def create_forecast(
     except ValueError as e:
         # Update query status to failed
         if 'forecast_query' in locals():
-            forecast_query.status = "failed"
-            await session.commit()
+            await db.update("forecastquery", forecast_query["id"], {"status": "failed"})
         
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -110,8 +105,7 @@ async def create_forecast(
     except Exception as e:
         # Update query status to failed
         if 'forecast_query' in locals():
-            forecast_query.status = "failed"
-            await session.commit()
+            await db.update("forecastquery", forecast_query["id"], {"status": "failed"})
         
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -261,7 +255,7 @@ async def _execute_calculation(parsed_intent: Dict[str, Any]) -> tuple[Dict[str,
 @router.get("/{query_id}", response_model=ForecastResponse)
 async def get_forecast(
     query_id: int,
-    session: AsyncSession = Depends(get_session)
+    current_user: Dict[str, Any] = Depends(get_current_active_user)
 ) -> ForecastResponse:
     """
     Get a specific forecast by query ID.
@@ -277,10 +271,7 @@ async def get_forecast(
         HTTPException: If forecast not found
     """
     # Get forecast query
-    query_result = await session.execute(
-        select(ForecastQuery).where(ForecastQuery.id == query_id)
-    )
-    forecast_query = query_result.scalar_one_or_none()
+    forecast_query = await db.get_by_id("forecastquery", query_id)
     
     if not forecast_query:
         raise HTTPException(
@@ -288,18 +279,23 @@ async def get_forecast(
             detail="Forecast not found"
         )
     
+    # Check if user owns this forecast
+    if forecast_query["user_id"] != current_user["id"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+    
     # Get forecast result
-    result_query = await session.execute(
-        select(ForecastResult).where(ForecastResult.query_id == query_id)
-    )
-    forecast_result = result_query.scalar_one_or_none()
+    forecast_results = await db.query("forecastresult", {"query_id": query_id})
+    forecast_result = forecast_results[0] if forecast_results else None
     
     return ForecastResponse(
-        query_id=forecast_query.id,
-        status=forecast_query.status,
-        result=forecast_result.result if forecast_result else None,
-        assumptions_used=forecast_result.assumptions_used if forecast_result else None,
-        message=f"Forecast {forecast_query.status}"
+        query_id=forecast_query["id"],
+        status=forecast_query["status"],
+        result=forecast_result["result"] if forecast_result else None,
+        assumptions_used=forecast_result["assumptions_used"] if forecast_result else None,
+        message=f"Forecast {forecast_query['status']}"
     )
 
 
@@ -307,7 +303,7 @@ async def get_forecast(
 async def list_forecasts(
     limit: int = 10,
     offset: int = 0,
-    session: AsyncSession = Depends(get_session)
+    current_user: Dict[str, Any] = Depends(get_current_active_user)
 ) -> list[ForecastResponse]:
     """
     List recent forecasts with pagination.
@@ -320,29 +316,28 @@ async def list_forecasts(
     Returns:
         List of forecast responses
     """
-    # Get recent forecast queries
-    query_result = await session.execute(
-        select(ForecastQuery)
-        .order_by(ForecastQuery.created_at.desc())
-        .limit(limit)
-        .offset(offset)
+    # Get recent forecast queries for the current user
+    forecast_queries = await db.query(
+        "forecastquery", 
+        {"user_id": current_user["id"]}, 
+        "created_at.desc"
     )
-    forecast_queries = query_result.scalars().all()
+    
+    # Apply pagination
+    forecast_queries = forecast_queries[offset:offset + limit]
     
     responses = []
     for query in forecast_queries:
         # Get associated result
-        result_query = await session.execute(
-            select(ForecastResult).where(ForecastResult.query_id == query.id)
-        )
-        forecast_result = result_query.scalar_one_or_none()
+        forecast_results = await db.query("forecastresult", {"query_id": query["id"]})
+        forecast_result = forecast_results[0] if forecast_results else None
         
         responses.append(ForecastResponse(
-            query_id=query.id,
-            status=query.status,
-            result=forecast_result.result if forecast_result else None,
-            assumptions_used=forecast_result.assumptions_used if forecast_result else None,
-            message=f"Forecast {query.status}"
+            query_id=query["id"],
+            status=query["status"],
+            result=forecast_result["result"] if forecast_result else None,
+            assumptions_used=forecast_result["assumptions_used"] if forecast_result else None,
+            message=f"Forecast {query['status']}"
         ))
     
     return responses
@@ -351,7 +346,8 @@ async def list_forecasts(
 @router.post("/export")
 async def export_forecast_to_excel(
     query_id: int,
-    session: AsyncSession = Depends(get_session)
+    background_tasks: BackgroundTasks,
+    current_user: Dict[str, Any] = Depends(get_current_active_user)
 ):
     """
     Export a forecast to Excel format.
@@ -367,10 +363,7 @@ async def export_forecast_to_excel(
         HTTPException: If forecast not found
     """
     # Get forecast query
-    query_result = await session.execute(
-        select(ForecastQuery).where(ForecastQuery.id == query_id)
-    )
-    forecast_query = query_result.scalar_one_or_none()
+    forecast_query = await db.get_by_id("forecastquery", query_id)
     
     if not forecast_query:
         raise HTTPException(
@@ -378,11 +371,16 @@ async def export_forecast_to_excel(
             detail="Forecast not found"
         )
     
+    # Check if user owns this forecast
+    if forecast_query["user_id"] != current_user["id"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied"
+        )
+    
     # Get forecast result
-    result_query = await session.execute(
-        select(ForecastResult).where(ForecastResult.query_id == query_id)
-    )
-    forecast_result = result_query.scalar_one_or_none()
+    forecast_results = await db.query("forecastresult", {"query_id": query_id})
+    forecast_result = forecast_results[0] if forecast_results else None
     
     if not forecast_result:
         raise HTTPException(
@@ -390,15 +388,15 @@ async def export_forecast_to_excel(
             detail="Forecast result not found"
         )
     
-    # Start Excel generation task
-    task = generate_excel_report.delay(
+    # Start Excel generation as background task
+    background_tasks.add_task(
+        generate_excel_report,
         query_id=query_id,
-        forecast_data=forecast_result.result,
-        assumptions=forecast_result.assumptions_used
+        forecast_data=forecast_result["result"],
+        assumptions=forecast_result["assumptions_used"]
     )
     
     return {
-        "task_id": task.id,
         "status": "processing",
-        "message": "Excel generation started"
+        "message": "Excel generation started in background"
     }

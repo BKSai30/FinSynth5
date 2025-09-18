@@ -9,13 +9,10 @@ from sqlmodel import SQLModel, Field, Relationship
 
 
 class User(SQLModel, table=True):
-    """User model for authentication and forecast history."""
+    """User model for Supabase Auth integration."""
     
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: str = Field(primary_key=True)  # Supabase uses UUID strings
     email: str = Field(unique=True, index=True, max_length=255)
-    hashed_password: str = Field(max_length=255)
-    is_active: bool = Field(default=True)
-    is_verified: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = Field(default=None)
     
@@ -27,7 +24,7 @@ class ForecastQuery(SQLModel, table=True):
     """Model for storing user forecast queries and parsed intents."""
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", index=True)
+    user_id: str = Field(foreign_key="user.id", index=True)  # Changed to string for Supabase UUID
     query_text: str = Field(max_length=2000)
     parsed_intent: Dict[str, Any] = Field(default_factory=dict)  # JSON field
     status: str = Field(default="pending", max_length=50)  # pending, processing, completed, failed
@@ -69,22 +66,24 @@ class ForecastResponse(SQLModel):
 
 
 class UserCreate(SQLModel):
-    """Model for user registration."""
+    """Model for user registration with Supabase."""
     email: str = Field(max_length=255)
     password: str = Field(min_length=8, max_length=100)
 
 
 class UserLogin(SQLModel):
-    """Model for user login."""
+    """Model for user login with Supabase."""
     email: str = Field(max_length=255)
     password: str = Field(max_length=100)
 
 
-class Token(SQLModel):
-    """Model for JWT token response."""
+class SupabaseAuthResponse(SQLModel):
+    """Model for Supabase authentication response."""
     access_token: str
-    token_type: str = "bearer"
+    refresh_token: str
     expires_in: int
+    token_type: str = "bearer"
+    user: Dict[str, Any]
 
 
 class HealthResponse(SQLModel):

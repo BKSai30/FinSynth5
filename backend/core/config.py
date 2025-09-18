@@ -4,17 +4,28 @@ Uses Pydantic BaseSettings to load environment variables.
 """
 
 from typing import Optional
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
     
-    # Database
-    database_url: str = Field(
-        default="postgresql+asyncpg://user:password@localhost:5432/asf_db",
-        env="DATABASE_URL",
-        description="PostgreSQL database URL with asyncpg driver"
+    # Supabase Configuration
+    supabase_url: str = Field(
+        default="",
+        env="SUPABASE_URL",
+        description="Supabase project URL"
+    )
+    supabase_anon_key: str = Field(
+        default="",
+        env="SUPABASE_ANON_KEY",
+        description="Supabase anonymous key for client-side operations"
+    )
+    supabase_service_key: str = Field(
+        default="",
+        env="SUPABASE_SERVICE_KEY",
+        description="Supabase service key for server-side operations"
     )
     
     # OpenAI API
@@ -24,28 +35,12 @@ class Settings(BaseSettings):
         description="OpenAI API key for GPT-4 and embeddings"
     )
     
-    # Redis
-    redis_url: str = Field(
-        default="redis://localhost:6379/0",
-        env="REDIS_URL",
-        description="Redis URL for caching and Celery message broker"
-    )
     
-    # JWT Authentication
-    jwt_secret: str = Field(
-        default="your-secret-key-change-in-production",
-        env="JWT_SECRET",
-        description="Secret key for JWT token signing"
-    )
-    jwt_algorithm: str = Field(
-        default="HS256",
-        env="JWT_ALGORITHM",
-        description="JWT signing algorithm"
-    )
-    jwt_expire_minutes: int = Field(
-        default=30,
-        env="JWT_EXPIRE_MINUTES",
-        description="JWT token expiration time in minutes"
+    # Supabase Authentication (replaces JWT)
+    supabase_jwt_secret: str = Field(
+        default="",
+        env="SUPABASE_JWT_SECRET",
+        description="Supabase JWT secret for token verification"
     )
     
     # Application
@@ -72,17 +67,6 @@ class Settings(BaseSettings):
         description="Allowed CORS origins"
     )
     
-    # Celery
-    celery_broker_url: str = Field(
-        default="redis://localhost:6379/1",
-        env="CELERY_BROKER_URL",
-        description="Celery message broker URL"
-    )
-    celery_result_backend: str = Field(
-        default="redis://localhost:6379/2",
-        env="CELERY_RESULT_BACKEND",
-        description="Celery result backend URL"
-    )
     
     # OpenAI Model Configuration
     openai_model: str = Field(
@@ -100,6 +84,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"  # Ignore extra environment variables
 
 
 # Global settings instance

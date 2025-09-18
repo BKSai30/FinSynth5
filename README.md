@@ -1,27 +1,27 @@
-# 🚀 ASF - Autonomous Strategic Finance
+# 🚀 FinSynth - AI-Powered Financial Forecasting Platform
 
-A complete AI-powered financial forecasting platform built according to the comprehensive PRD specifications. This is a production-ready system with both backend and frontend components.
+A complete AI-powered financial forecasting platform built with modern technologies. This is a production-ready system with both backend and frontend components, featuring Supabase integration and streamlined architecture.
 
 ## 🎯 **What This Is**
 
-ASF is an enterprise-grade financial forecasting platform that:
+FinSynth is an enterprise-grade financial forecasting platform that:
 - **Converts natural language queries** into structured financial forecasts
 - **Uses AI (OpenAI GPT-4)** for query parsing and knowledge retrieval
 - **Performs pure Python calculations** for accurate financial modeling
 - **Provides real-time updates** via WebSocket connections
-- **Generates professional Excel reports** with background processing
+- **Generates professional Excel reports** with FastAPI background tasks
 - **Offers a beautiful, responsive dashboard** for data visualization
+- **Uses Supabase** for authentication, database, and real-time features
 
 ## 🏗️ **Complete Architecture**
 
 ### **Backend (FastAPI + Python)**
 - ✅ **FastAPI** with async/await for high performance
-- ✅ **PostgreSQL** with pgvector for semantic search
+- ✅ **Supabase** for database, authentication, and real-time features
 - ✅ **OpenAI API** integration with structured prompts
-- ✅ **Redis** for caching and Celery message broker
-- ✅ **Celery** for background Excel generation
+- ✅ **FastAPI BackgroundTasks** for Excel generation (no Redis/Celery needed)
 - ✅ **Socket.IO** for real-time WebSocket communication
-- ✅ **JWT Authentication** with secure token handling
+- ✅ **Supabase Auth** for secure user authentication
 - ✅ **SQLModel** for type-safe database operations
 
 ### **Frontend (Next.js + React)**
@@ -32,30 +32,28 @@ ASF is an enterprise-grade financial forecasting platform that:
 - ✅ **TanStack Query** for server state synchronization
 - ✅ **Socket.IO Client** for real-time updates
 - ✅ **Recharts** for beautiful data visualizations
-- ✅ **NextAuth.js** ready for authentication
+- ✅ **Supabase Auth** for user authentication
 
 ## 📁 **Project Structure**
 
 ```
-finsynth-dashboard/
+FinSynth/
 ├── backend/                    # FastAPI Backend
 │   ├── core/                   # Configuration & database
 │   │   ├── config.py          # Pydantic settings
-│   │   ├── database.py        # Async SQLAlchemy
-│   │   ├── auth.py            # JWT authentication
+│   │   ├── database.py        # Supabase client
+│   │   ├── auth.py            # Supabase authentication
 │   │   └── socketio.py        # WebSocket server
 │   ├── models/                # Database models
 │   │   └── forecast.py        # SQLModel tables
 │   ├── services/              # Business logic
 │   │   ├── knowledge_service.py    # RAG pipeline
 │   │   ├── query_parser.py         # OpenAI integration
-│   │   ├── vector_service.py       # pgvector operations
+│   │   ├── vector_service.py       # Vector operations
+│   │   ├── background_tasks.py     # Excel generation
 │   │   └── calculators/            # Financial engines
 │   ├── routers/               # API endpoints
 │   │   └── forecast.py        # Forecast routes
-│   ├── workers/               # Background tasks
-│   │   ├── celery_app.py      # Celery configuration
-│   │   └── tasks.py           # Excel generation
 │   └── main.py                # FastAPI application
 ├── frontend/                   # Next.js Frontend
 │   ├── app/                   # App Router pages
@@ -65,27 +63,67 @@ finsynth-dashboard/
 │   │   └── ui/                # UI component library
 │   ├── hooks/                 # Custom React hooks
 │   ├── lib/                   # Utilities & stores
+│   │   └── supabase.ts        # Supabase client
 │   ├── services/              # API services
 │   └── types/                 # TypeScript types
-└── requirements.txt           # Python dependencies
+├── components/                # Shared UI components
+├── lib/                       # Shared utilities
+├── requirements.txt           # Python dependencies
+├── package.json               # Node.js dependencies
+├── .env                       # Environment variables
+└── supabase-schema.sql        # Database schema
 ```
 
 ## 🚀 **Quick Start**
 
+### **Prerequisites**
+- Python 3.12+
+- Node.js 18+
+- Supabase account
+- OpenAI API key
+
+### **Setup Steps**
+
+1. **Clone and Install Dependencies**
 ```bash
-# Backend setup
-cd backend
+# Install Python dependencies
 pip install -r requirements.txt
-python -m backend.main
 
-# Frontend setup (new terminal)
-cd frontend
+# Install Node.js dependencies
 npm install
-npm run dev
-
-# Celery worker (new terminal)
-celery -A backend.workers.celery_app worker --loglevel=info
 ```
+
+2. **Configure Environment**
+```bash
+# Copy environment template
+cp env.example .env
+
+# Edit .env with your API keys:
+# - SUPABASE_URL
+# - SUPABASE_ANON_KEY
+# - SUPABASE_SERVICE_KEY
+# - SUPABASE_JWT_SECRET
+# - OPENAI_API_KEY
+```
+
+3. **Set Up Database**
+- Go to your Supabase dashboard
+- Navigate to SQL Editor
+- Run the SQL from `supabase-schema.sql`
+
+4. **Start the Application**
+```bash
+# Backend (Terminal 1)
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Frontend (Terminal 2)
+npm run dev
+```
+
+5. **Access the Application**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
 
 ## 🧠 **AI-Powered Features**
 
@@ -96,7 +134,7 @@ celery -A backend.workers.celery_app worker --loglevel=info
 
 ### **Retrieval-Augmented Generation (RAG)**
 - **Knowledge Base**: Vectorized financial model knowledge
-- **Semantic Search**: pgvector for finding relevant context
+- **Semantic Search**: Vector search for finding relevant context
 - **Context Injection**: Relevant knowledge injected into LLM prompts
 
 ### **Pure Python Calculations**
@@ -166,17 +204,19 @@ curl -X POST "http://localhost:8000/api/v1/forecast/" \
 ### **Environment Variables**
 
 ```bash
-# Database
-DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/asf_db
+# Supabase Configuration
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_KEY=your-supabase-service-key
+SUPABASE_JWT_SECRET=your-supabase-jwt-secret
 
 # OpenAI API
 OPENAI_API_KEY=your-openai-api-key-here
 
-# Redis
-REDIS_URL=redis://localhost:6379/0
-
-# JWT Authentication
-JWT_SECRET=your-secret-key-change-in-production
+# Frontend Environment Variables
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 
 # Application
 DEBUG=true
@@ -222,7 +262,7 @@ npm run test:coverage
 
 ### **Real-time Processing**
 - **WebSocket Updates**: Live progress during forecast generation
-- **Background Tasks**: Excel generation with Celery workers
+- **Background Tasks**: Excel generation with FastAPI BackgroundTasks
 - **Progress Tracking**: Real-time progress bars and status updates
 
 ### **Excel Report Generation**
@@ -230,17 +270,19 @@ npm run test:coverage
 - **Summary Sheet**: Key metrics and overview
 - **Monthly Data**: Detailed breakdown by month
 - **Assumptions Sheet**: All parameters used
-- **S3 Storage**: Cloud storage for generated reports
+- **Cloud Storage**: S3 or local storage for generated reports
 
-### **Vector Search**
-- **Knowledge Base**: Vectorized financial model knowledge
-- **Semantic Search**: Find relevant context for queries
-- **RAG Pipeline**: Enhanced AI responses with business context
+### **Supabase Integration**
+- **Authentication**: Built-in user management and JWT tokens
+- **Database**: PostgreSQL with real-time subscriptions
+- **Row Level Security**: Secure data access policies
+- **Real-time**: Live updates across all connected clients
 
 ## 📚 **Documentation**
 
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [Next.js Documentation](https://nextjs.org/docs)
+- [Supabase Documentation](https://supabase.com/docs)
 - [SQLModel Documentation](https://sqlmodel.tiangolo.com/)
 - [TanStack Query](https://tanstack.com/query/latest)
 - [Zustand](https://zustand-demo.pmnd.rs/)
@@ -263,11 +305,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 This implementation provides a complete, production-ready foundation for AI-powered financial forecasting. The system is designed to scale and can be extended with:
 
-- **User Authentication**: NextAuth.js integration
 - **Advanced Analytics**: More sophisticated financial models
 - **Multi-tenant Support**: Multiple organizations
 - **API Rate Limiting**: Production-grade API management
 - **Monitoring**: OpenTelemetry and logging
-- **Caching**: Redis caching strategies
+- **Enhanced UI**: More interactive dashboard features
+- **Mobile App**: React Native mobile application
+
+## 🚀 **Key Benefits of This Architecture**
+
+- **Simplified Setup**: No Redis or Celery configuration needed
+- **Built-in Auth**: Supabase handles user management
+- **Real-time**: Live updates across all clients
+- **Scalable**: Supabase handles database scaling
+- **Modern Stack**: Latest technologies and best practices
+- **Production Ready**: Secure, performant, and maintainable
 
 **Ready to transform financial planning with AI! 🚀**

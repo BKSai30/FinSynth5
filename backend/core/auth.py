@@ -1,65 +1,76 @@
 """
 Authentication and authorization utilities.
-Implements JWT token-based authentication as specified in the PRD.
+Implements Supabase Auth for authentication.
 """
 
-from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
-from jose import JWTError, jwt
-from passlib.context import CryptContext
 from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
+from supabase import create_client, Client
 
 from .config import settings
-from .database import get_session
+from .database import supabase
 from ..models.forecast import User
-
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT token scheme
 security = HTTPBearer()
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against its hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+async def sign_up(email: str, password: str) -> Dict[str, Any]:
+    """Sign up a new user with Supabase Auth."""
+    try:
+        result = supabase.auth.sign_up({
+            "email": email,
+            "password": password
+        })
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Sign up failed: {str(e)}"
+        )
 
 
-def get_password_hash(password: str) -> str:
-    """Hash a password."""
-    return pwd_context.hash(password)
+async def sign_in(email: str, password: str) -> Dict[str, Any]:
+    """Sign in a user with Supabase Auth."""
+    try:
+        result = supabase.auth.sign_in_with_password({
+            "email": email,
+            "password": password
+        })
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Sign in failed: {str(e)}"
+        )
 
 
-def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
-    """Create a JWT access token."""
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.jwt_expire_minutes)
-    
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.jwt_secret, algorithm=settings.jwt_algorithm)
-    return encoded_jwt
+async def sign_out() -> None:
+    """Sign out the current user."""
+    try:
+        supabase.auth.sign_out()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Sign out failed: {str(e)}"
+        )
 
 
 def verify_token(token: str) -> Optional[Dict[str, Any]]:
-    """Verify and decode a JWT token."""
+    """Verify and decode a Supabase JWT token."""
     try:
-        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
-        return payload
-    except JWTError:
+        # Supabase handles JWT verification internally
+        # We'll use the user from the session instead
+        return None
+    except Exception:
         return None
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    session: AsyncSession = Depends(get_session)
-) -> User:
-    """Get the current authenticated user."""
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> Dict[str, Any]:
+    """Get the current authenticated user from Supabase."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -67,27 +78,19 @@ async def get_current_user(
     )
     
     token = credentials.credentials
-    payload = verify_token(token)
     
-    if payload is None:
+    try:
+        # Get user from Supabase using the token
+        user = supabase.auth.get_user(token)
+        if not user or not user.user:
+            raise credentials_exception
+        
+        return user.user
+    except Exception:
         raise credentials_exception
-    
-    user_id: int = payload.get("sub")
-    if user_id is None:
-        raise credentials_exception
-    
-    # Get user from database
-    result = await session.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-    
-    if user is None:
-        raise credentials_exception
-    
-    return user
 
 
-async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
+async def get_current_active_user(current_user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
     """Get the current active user."""
-    if not current_user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+    # Supabase handles user status internally
     return current_user
