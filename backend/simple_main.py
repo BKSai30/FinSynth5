@@ -19,9 +19,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Supabase configuration
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://gavrdclfnuhjtjsgjlq.supabase.co")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhdnJkY2xmbnVodGp0c2dqbGpxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODE4NjAzNiwiZXhwIjoyMDczNzYyMDM2fQ._-IhpBQ1zYIV-kacmjawBIm3gvp7C6mXRIHbcRSb3Kc")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "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")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Initialize Supabase client
 try:
@@ -51,7 +51,7 @@ except Exception as e:
 # Initialize Anthropic Claude client
 try:
     import anthropic
-    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "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")
+    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
     claude_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     CLAUDE_CONNECTED = True
     print("✅ Anthropic Claude connected successfully")
