@@ -4,7 +4,7 @@
 -- Enable pgvector extension for vector operations
 CREATE EXTENSION IF NOT EXISTS vector;
 
--- Create database if it doesn't exist (handled by docker-compose)
+-- Create database if it doesn't exist
 -- CREATE DATABASE asf_db;
 
 -- Grant permissions

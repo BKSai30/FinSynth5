@@ -67,35 +67,10 @@ finsynth-dashboard/
 │   ├── lib/                   # Utilities & stores
 │   ├── services/              # API services
 │   └── types/                 # TypeScript types
-├── docker-compose.yml         # Development environment
-├── Dockerfile.backend         # Backend container
-├── Dockerfile.frontend        # Frontend container
 └── requirements.txt           # Python dependencies
 ```
 
 ## 🚀 **Quick Start**
-
-### **Option 1: Docker Compose (Recommended)**
-
-```bash
-# Clone and setup
-git clone <repository>
-cd finsynth-dashboard
-
-# Create environment file
-cp .env.example .env
-# Edit .env with your OpenAI API key
-
-# Start all services
-docker-compose up -d
-
-# Access the application
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:8000
-# API Docs: http://localhost:8000/docs
-```
-
-### **Option 2: Local Development**
 
 ```bash
 # Backend setup
@@ -235,15 +210,6 @@ npm run test:coverage
 ```
 
 ## 📈 **Production Deployment**
-
-### **Docker Deployment**
-```bash
-# Build and deploy
-docker-compose -f docker-compose.prod.yml up -d
-
-# Scale services
-docker-compose up -d --scale celery-worker=3
-```
 
 ### **Environment Setup**
 - Use strong `JWT_SECRET`
