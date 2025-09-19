@@ -10,6 +10,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14+-black?style=flat&logo=next.js)](https://nextjs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green?style=flat&logo=fastapi)](https://fastapi.tiangolo.com)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue?style=flat&logo=typescript)](https://typescriptlang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 </div>
 
@@ -103,23 +104,39 @@ pip install python-multipart
 ```bash
 # Install Node.js dependencies
 npm install
+# or
+pnpm install
 ```
 
 ### **4. Environment Configuration (Optional)**
+Create a `.env` file in the root directory:
 ```bash
-# Create .env file with your API keys (optional - has fallbacks)
-# OPENAI_API_KEY=your-openai-api-key
-# ANTHROPIC_API_KEY=your-anthropic-api-key
+# AI Services (Optional - has fallbacks)
+OPENAI_API_KEY=your-openai-api-key-here
+ANTHROPIC_API_KEY=your-anthropic-api-key-here
+
+# Supabase (Optional - has file-based fallback)
+SUPABASE_URL=your-supabase-url
+SUPABASE_SERVICE_KEY=your-supabase-service-key
+
+# Application Settings
+DEBUG=true
+ENVIRONMENT=development
 ```
 
 ### **5. Start the Application**
 
 **Option A: Use the startup script (Windows)**
 ```bash
+start-project.bat
+```
+
+**Option B: Use the simple startup script**
+```bash
 simple-start.bat
 ```
 
-**Option B: Manual startup**
+**Option C: Manual startup**
 
 **Terminal 1 - Backend:**
 ```bash
@@ -133,8 +150,8 @@ npm run dev
 
 ### **6. Access the Application**
 - **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8003
-- **API Documentation**: http://localhost:8003/docs
+- **Backend API**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
 
 ## 📊 **Financial Model Structure**
 
@@ -245,7 +262,7 @@ FinSynth/
 ### **1. Register and Login**
 ```bash
 # Register a new user
-curl -X POST "http://localhost:8003/api/v1/auth/register" \
+curl -X POST "http://localhost:8000/api/v1/auth/register" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "user@example.com",
@@ -263,7 +280,7 @@ curl -X POST "http://localhost:8003/api/v1/auth/register" \
 ### **2. Create a Forecast**
 ```bash
 # Create a forecast
-curl -X POST "http://localhost:8003/api/v1/forecast" \
+curl -X POST "http://localhost:8000/api/v1/forecast" \
   -H "Content-Type: application/json" \
   -d '{
     "query": "What will be my revenue in the next 6 months if I increase my customer base by 20%",
@@ -326,6 +343,10 @@ curl -X POST "http://localhost:8003/api/v1/forecast" \
 # AI Services (Optional - has fallbacks)
 OPENAI_API_KEY=your-openai-api-key-here
 ANTHROPIC_API_KEY=your-anthropic-api-key-here
+
+# Supabase (Optional - has file-based fallback)
+SUPABASE_URL=your-supabase-url
+SUPABASE_SERVICE_KEY=your-supabase-service-key
 
 # Application Settings
 DEBUG=true
@@ -490,8 +511,8 @@ This implementation provides a complete, production-ready foundation for AI-powe
 
 ### **Debug Endpoints**
 
-- **View Users**: http://localhost:8003/api/v1/debug/users
-- **API Documentation**: http://localhost:8003/docs
+- **View Users**: http://localhost:8000/api/v1/debug/users
+- **API Documentation**: http://localhost:8000/docs
 
 ---
 
