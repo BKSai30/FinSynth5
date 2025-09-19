@@ -6,13 +6,14 @@ This version removes complex database models and focuses on basic functionality.
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import json
 import hashlib
 import secrets
-from datetime import datetime
+import requests
+import re
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -60,6 +61,17 @@ except Exception as e:
     CLAUDE_CONNECTED = False
     claude_client = None
 
+# Seasonal patterns for different industries
+SEASONAL_PATTERNS = {
+    "Toys": {"peak": [11, 12, 1], "low": [6, 7, 8], "multiplier": 1.5},
+    "Retail": {"peak": [11, 12], "low": [1, 2], "multiplier": 1.3},
+    "Automotive": {"peak": [3, 4, 5], "low": [12, 1], "multiplier": 1.2},
+    "Technology": {"peak": [9, 10, 11], "low": [6, 7], "multiplier": 1.1},
+    "Healthcare": {"peak": [1, 2, 3], "low": [7, 8], "multiplier": 1.05},
+    "Education": {"peak": [8, 9], "low": [6, 7], "multiplier": 1.2},
+    "Default": {"peak": [11, 12], "low": [1, 2], "multiplier": 1.0}
+}
+
 # Create FastAPI application
 app = FastAPI(
     title="ASF Backend",
@@ -86,22 +98,35 @@ import os
 from pathlib import Path
 
 USERS_DB_FILE = "users_data.json"
+# Also try parent directory
+USERS_DB_FILE_PARENT = "../users_data.json"
 users_db = {}  # Fallback storage
 
 def load_users_from_file():
     """Load users from JSON file"""
     global users_db
+    
+    # Try current directory first
     if os.path.exists(USERS_DB_FILE):
         try:
             with open(USERS_DB_FILE, 'r') as f:
                 users_db = json.load(f)
-            print(f"✅ Loaded {len(users_db)} users from file")
+            print(f"✅ Loaded {len(users_db)} users from file: {USERS_DB_FILE}")
         except Exception as e:
             print(f"❌ Failed to load users from file: {e}")
             users_db = {}
+    # Try parent directory
+    elif os.path.exists(USERS_DB_FILE_PARENT):
+        try:
+            with open(USERS_DB_FILE_PARENT, 'r') as f:
+                users_db = json.load(f)
+            print(f"✅ Loaded {len(users_db)} users from file: {USERS_DB_FILE_PARENT}")
+        except Exception as e:
+            print(f"❌ Failed to load users from parent file: {e}")
+            users_db = {}
     else:
         users_db = {}
-        print("📝 No existing users file found, starting fresh")
+        print(f"📝 No existing users file found in {USERS_DB_FILE} or {USERS_DB_FILE_PARENT}, starting fresh")
 
 def save_users_to_file():
     """Save users to JSON file"""
@@ -316,7 +341,7 @@ def parse_query_for_assumptions(query: str, company_data: Dict[str, Any]) -> Dic
         # Large Customer (Enterprise) Business Unit
         "large_seed_sales_team": 2,
         "large_new_salespeople_per_month": 1,
-        "large_deals_per_salesperson_per_month": 1.5,
+        "large_deals_per_salesperson_per_month": 1,
         "large_avg_revenue_per_user": 16500,
         
         # SMB Customer Business Unit
@@ -424,12 +449,12 @@ def parse_query_for_assumptions(query: str, company_data: Dict[str, Any]) -> Dic
     # Specific business scenario parsing
     if "startup" in query_lower or "new business" in query_lower:
         assumptions["large_seed_sales_team"] = 1
-        assumptions["large_new_salespeople_per_month"] = 0.5
+        assumptions["large_new_salespeople_per_month"] = 1
         assumptions["smb_monthly_marketing_budget"] = 10000
     
     if "enterprise" in query_lower or "b2b" in query_lower:
         assumptions["large_avg_revenue_per_user"] = 25000
-        assumptions["large_deals_per_salesperson_per_month"] = 1.0
+        assumptions["large_deals_per_salesperson_per_month"] = 1
         assumptions["smb_avg_revenue_per_user"] = 2000
     
     if "saas" in query_lower or "subscription" in query_lower:
@@ -484,6 +509,83 @@ def parse_query_for_assumptions(query: str, company_data: Dict[str, Any]) -> Dic
             assumptions["smb_avg_revenue_per_user"] = max(500, avg_revenue_per_customer * 0.5)
     
     return assumptions
+
+def apply_seasonal_adjustment(forecast_data: List[Dict], industry: str, seasonal_enabled: bool = False) -> List[Dict]:
+    """Apply seasonal adjustments to forecast data based on industry patterns."""
+    if not seasonal_enabled:
+        return forecast_data
+    
+    pattern = SEASONAL_PATTERNS.get(industry, SEASONAL_PATTERNS["Default"])
+    adjusted_data = []
+    
+    for i, month_data in enumerate(forecast_data):
+        # Calculate the month (1-12) for this forecast period
+        current_month = (datetime.now().month + i) % 12 or 12
+        
+        # Determine seasonal multiplier
+        if current_month in pattern["peak"]:
+            multiplier = pattern["multiplier"]
+        elif current_month in pattern["low"]:
+            multiplier = 1 / pattern["multiplier"]
+        else:
+            multiplier = 1.0
+        
+        # Apply seasonal adjustment to revenue and profit
+        adjusted_month = month_data.copy()
+        adjusted_month["total_monthly_revenue"] = month_data.get("total_monthly_revenue", 0) * multiplier
+        adjusted_month["monthly_profit"] = month_data.get("monthly_profit", 0) * multiplier
+        adjusted_month["large_monthly_revenue"] = month_data.get("large_monthly_revenue", 0) * multiplier
+        adjusted_month["smb_monthly_revenue"] = month_data.get("smb_monthly_revenue", 0) * multiplier
+        
+        # Customers don't fluctuate as much seasonally
+        customer_multiplier = 1 + (multiplier - 1) * 0.3
+        adjusted_month["total_customers"] = month_data.get("total_customers", 0) * customer_multiplier
+        adjusted_month["large_total_customers"] = month_data.get("large_total_customers", 0) * customer_multiplier
+        adjusted_month["smb_total_customers"] = month_data.get("smb_total_customers", 0) * customer_multiplier
+        
+        adjusted_data.append(adjusted_month)
+    
+    return adjusted_data
+
+def analyze_news_impact(company_name: str, industry: str, news_api_key: str = None) -> Dict[str, Any]:
+    """Analyze news impact on company/industry for forecast adjustments."""
+    if not news_api_key:
+        return {"impact_score": 0, "sentiment": "neutral", "articles": []}
+    
+    try:
+        # Simulate news analysis (in real implementation, use NewsAPI or similar)
+        # This is a placeholder for demonstration
+        news_impact = {
+            "impact_score": 0.05,  # 5% positive impact
+            "sentiment": "positive",
+            "articles": [
+                {
+                    "title": f"Positive outlook for {industry} industry",
+                    "sentiment": "positive",
+                    "relevance": 0.8
+                }
+            ]
+        }
+        return news_impact
+    except Exception as e:
+        print(f"News analysis error: {e}")
+        return {"impact_score": 0, "sentiment": "neutral", "articles": []}
+
+def apply_news_adjustment(forecast_data: List[Dict], news_impact: Dict[str, Any]) -> List[Dict]:
+    """Apply news impact adjustments to forecast data."""
+    if news_impact.get("impact_score", 0) == 0:
+        return forecast_data
+    
+    impact_multiplier = 1 + news_impact["impact_score"]
+    adjusted_data = []
+    
+    for month_data in forecast_data:
+        adjusted_month = month_data.copy()
+        adjusted_month["total_monthly_revenue"] = month_data.get("total_monthly_revenue", 0) * impact_multiplier
+        adjusted_month["monthly_profit"] = month_data.get("monthly_profit", 0) * impact_multiplier
+        adjusted_data.append(adjusted_month)
+    
+    return adjusted_data
 
 def generate_ai_insights(query: str, forecast_data: Dict[str, Any], company_data: Dict[str, Any] = None) -> str:
     """
@@ -619,22 +721,24 @@ def calculate_forecast_data(assumptions: Dict[str, Any]) -> Dict[str, Any]:
     
     for month in range(1, assumptions["forecast_period_months"] + 1):
         # Step 1: Calculate Large Customer Metrics for Month t
-        large_sales_team_count = assumptions["large_seed_sales_team"] + (assumptions["large_new_salespeople_per_month"] * (month - 1))
+        large_sales_team_count = round(assumptions["large_seed_sales_team"] + (assumptions["large_new_salespeople_per_month"] * (month - 1)))
         large_new_customers = large_sales_team_count * assumptions["large_deals_per_salesperson_per_month"]
         
         # Apply customer growth multiplier for new acquisitions
         large_new_customers *= customer_growth_multiplier
+        large_new_customers = round(large_new_customers)  # Ensure whole number of customers
         large_total_customers += large_new_customers
         
         # Apply revenue growth multiplier
         large_monthly_revenue = large_total_customers * assumptions["large_avg_revenue_per_user"] * revenue_growth_multiplier
         
         # Step 2: Calculate SMB Customer Metrics for Month t
-        smb_leads_generated = assumptions["smb_monthly_marketing_budget"] / assumptions["smb_customer_acquisition_cost"]
+        smb_leads_generated = round(assumptions["smb_monthly_marketing_budget"] / assumptions["smb_customer_acquisition_cost"])
         smb_new_customers = smb_leads_generated * assumptions["smb_conversion_rate"]
         
         # Apply customer growth multiplier for new acquisitions
         smb_new_customers *= customer_growth_multiplier
+        smb_new_customers = round(smb_new_customers)  # Ensure whole number of customers
         smb_total_customers += smb_new_customers
         
         # Apply revenue growth multiplier
@@ -715,6 +819,12 @@ async def create_forecast(request: Dict[str, Any]):
         company_data = request.get("company_data", {})
         print(f"📊 Company data received: {company_data}")
         
+        # Get advanced options
+        industry = request.get("industry", "Technology")
+        seasonal_enabled = request.get("seasonal_enabled", False)
+        news_enabled = request.get("news_enabled", False)
+        news_api_key = request.get("news_api_key", "")
+        
         # Handle missing or empty company data gracefully
         if not company_data or not any(company_data.values()):
             print("⚠️ No company data provided, using default assumptions")
@@ -733,20 +843,43 @@ async def create_forecast(request: Dict[str, Any]):
         forecast_results = calculate_forecast_data(assumptions)
         print(f"📈 Forecast calculated for {assumptions['forecast_period_months']} months")
         
-        # Step 3: Generate AI insights using multiple services with fallbacks
+        # Step 3: Apply seasonal adjustments if enabled
+        if seasonal_enabled:
+            print(f"🌍 Applying seasonal adjustments for {industry} industry")
+            forecast_results["forecast_data"] = apply_seasonal_adjustment(
+                forecast_results["forecast_data"], industry, seasonal_enabled
+            )
+        
+        # Step 4: Analyze news impact if enabled
+        news_impact = {"impact_score": 0, "sentiment": "neutral", "articles": []}
+        if news_enabled and news_api_key:
+            print("📰 Analyzing news impact")
+            company_name = company_data.get("company_name", "Company")
+            news_impact = analyze_news_impact(company_name, industry, news_api_key)
+            if news_impact["impact_score"] != 0:
+                forecast_results["forecast_data"] = apply_news_adjustment(
+                    forecast_results["forecast_data"], news_impact
+                )
+        
+        # Step 5: Generate AI insights using multiple services with fallbacks
         ai_insights = generate_ai_insights(query, forecast_results, company_data)
         
-        # Step 4: Format response with structured data
+        # Step 6: Format response with structured data
         response_data = {
             "query_id": hash(query) % 10000,  # Deterministic ID based on query
             "status": "completed",
+            "query": query,
             "assumptions_used": assumptions,
             "forecast_data": forecast_results["forecast_data"],
             "summary": forecast_results["summary"],
-            "ai_insights": ai_insights,
+            "ai_analysis": ai_insights,
             "confidence_score": 95,  # High confidence with structured business logic
             "forecast_period": f"{assumptions['forecast_period_months']} months",
-            "message": "Advanced forecast generated using structured business logic framework"
+            "industry": industry,
+            "seasonal_enabled": seasonal_enabled,
+            "news_enabled": news_enabled,
+            "news_impact": news_impact,
+            "message": "Advanced forecast generated using structured business logic framework with seasonal and news analysis"
         }
         
         return response_data

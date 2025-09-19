@@ -1,193 +1,287 @@
 # 📁 FinSynth Project Structure
 
-This document outlines the clean, organized structure of the FinSynth application after reorganization.
+This document provides a detailed overview of the FinSynth project structure, explaining the purpose and organization of each directory and file.
 
 ## 🏗️ **Root Directory Structure**
 
 ```
 FinSynth/
-├── 📁 app/                          # Next.js App Router
-│   ├── globals.css                  # Global styles
-│   ├── layout.tsx                   # Root layout
-│   └── page.tsx                     # Main dashboard page
-├── 📁 backend/                      # FastAPI Backend
-│   ├── __init__.py
-│   ├── main.py                      # FastAPI application entry point
-│   ├── 📁 core/                     # Core configuration
-│   │   ├── __init__.py
-│   │   ├── auth.py                  # Supabase authentication
-│   │   ├── config.py                # Application settings
-│   │   ├── database.py              # Supabase database operations
-│   │   └── socketio.py              # WebSocket configuration
-│   ├── 📁 models/                   # Database models
-│   │   ├── __init__.py
-│   │   └── forecast.py              # SQLModel definitions
-│   ├── 📁 routers/                  # API routes
-│   │   ├── __init__.py
-│   │   └── forecast.py              # Forecast endpoints
-│   ├── 📁 services/                 # Business logic
-│   │   ├── __init__.py
-│   │   ├── background_tasks.py      # FastAPI background tasks
-│   │   ├── knowledge_service.py     # AI knowledge management
-│   │   ├── query_parser.py          # Natural language parsing
-│   │   ├── vector_service.py        # Vector search operations
-│   │   └── 📁 calculators/          # Financial calculators
-│   │       ├── __init__.py
-│   │       ├── large_customer_calculator.py
-│   │       └── smb_calculator.py
-│   └── 📁 tests/                    # Test files
-│       ├── __init__.py
-│       └── test_forecast.py
-├── 📁 components/                   # React Components
-│   ├── theme-provider.tsx           # Theme configuration
-│   ├── 📁 ui/                       # Shadcn/ui components
-│   │   ├── accordion.tsx
-│   │   ├── button.tsx
-│   │   ├── card.tsx
-│   │   ├── input.tsx
-│   │   ├── table.tsx
-│   │   └── ... (all UI components)
-│   ├── 📁 features/                 # Feature-specific components
-│   │   ├── assumptions-panel.tsx
-│   │   ├── forecast-chart.tsx
-│   │   ├── forecast-table.tsx
-│   │   ├── query-input.tsx
-│   │   └── summary-cards.tsx
-│   └── 📁 layout/                   # Layout components
-│       └── header.tsx
-├── 📁 hooks/                        # React Hooks
-│   ├── use-forecast.ts              # Forecast API hook
-│   ├── use-mobile.ts                # Mobile detection hook
-│   └── use-toast.ts                 # Toast notifications hook
-├── 📁 lib/                          # Utility libraries
-│   ├── supabase.ts                  # Supabase client configuration
-│   └── utils.ts                     # Utility functions
-├── 📁 services/                     # Frontend services
-│   └── api.ts                       # API service layer
-├── 📁 types/                        # TypeScript type definitions
-│   └── forecast.ts                  # Forecast-related types
-├── 📁 public/                       # Static assets
-│   ├── placeholder-logo.png
-│   ├── placeholder-logo.svg
-│   ├── placeholder-user.jpg
-│   ├── placeholder.jpg
-│   └── placeholder.svg
-├── 📁 venv/                         # Python virtual environment
+├── 📁 app/                          # Next.js Frontend Application
+├── 📁 backend/                      # FastAPI Backend Application
+├── 📁 components/                   # Shared React Components
+├── 📁 public/                       # Static Assets
+├── 📁 hooks/                        # Custom React Hooks
+├── 📁 lib/                          # Utility Libraries
+├── 📁 services/                     # Frontend Services
+├── 📁 types/                        # TypeScript Type Definitions
 ├── 📄 Configuration Files
-│   ├── components.json              # Shadcn/ui configuration
-│   ├── next.config.mjs              # Next.js configuration
-│   ├── package.json                 # Node.js dependencies
-│   ├── pnpm-lock.yaml               # Package lock file
-│   ├── postcss.config.mjs           # PostCSS configuration
-│   ├── requirements.txt             # Python dependencies
-│   ├── tsconfig.json                # TypeScript configuration
-│   └── env.example                  # Environment variables template
-├── 📄 Documentation
-│   ├── README.md                    # Main project documentation
-│   ├── README-SETUP.md              # Setup instructions
-│   ├── QUICK-START.md               # Quick start guide
-│   ├── INSTALLATION-GUIDE.md        # Detailed installation guide
-│   ├── INSTALL-PYTHON.md            # Python installation guide
-│   ├── PRD.md                       # Product Requirements Document
-│   ├── SUPABASE-MIGRATION.md        # Supabase migration guide
-│   ├── REDIS-CELERY-REMOVAL.md      # Redis/Celery removal guide
-│   └── PROJECT-STRUCTURE.md         # This file
+├── 📄 Documentation Files
 └── 📄 Scripts
-    ├── setup.bat                    # Setup script
-    └── start.bat                    # Start script
 ```
 
-## 🎯 **Key Organizational Principles**
+## 📱 **Frontend Structure (`app/`)**
 
-### **1. Separation of Concerns**
-- **Frontend**: React/Next.js components, hooks, and services
-- **Backend**: FastAPI routes, models, and business logic
-- **Shared**: Types and utilities used by both frontend and backend
+### **Next.js App Router Structure**
+```
+app/
+├── globals.css                      # Global CSS styles
+├── layout.tsx                       # Root layout component
+├── page.tsx                         # Homepage component
+├── forecast/                        # Forecasting interface
+│   └── page.tsx                     # Main forecast page
+├── login/                           # Authentication pages
+│   └── page.tsx                     # Login/register page
+├── components/                      # App-specific components
+│   ├── ui/                         # Shadcn/ui components
+│   ├── features/                   # Feature-specific components
+│   └── layout/                     # Layout components
+├── lib/                            # Utilities and configurations
+├── hooks/                          # Custom React hooks
+├── services/                       # API services
+└── types/                          # TypeScript types
+```
 
-### **2. Feature-Based Organization**
-- **Components**: Organized by feature (query-input, forecast-table, etc.)
-- **Services**: Business logic separated from UI components
-- **Hooks**: Reusable state management and API interactions
+### **Key Frontend Files**
+- **`app/page.tsx`**: Landing page with project overview
+- **`app/forecast/page.tsx`**: Main forecasting interface with charts and tables
+- **`app/login/page.tsx`**: Authentication interface
+- **`app/components/ui/`**: Reusable UI components (buttons, cards, etc.)
+- **`app/lib/utils.ts`**: Utility functions and helpers
 
-### **3. Clean Architecture**
-- **Core**: Configuration and infrastructure
-- **Models**: Data structures and database schemas
-- **Services**: Business logic and external integrations
-- **Routers**: API endpoints and request handling
+## ⚡ **Backend Structure (`backend/`)**
 
-### **4. Scalability**
-- **Modular Components**: Easy to add new features
+### **FastAPI Application Structure**
+```
+backend/
+├── simple_main.py                   # Main FastAPI application (port 8003)
+├── main.py                         # Alternative structured FastAPI app (port 8000)
+├── core/                           # Core configuration and infrastructure
+│   ├── config.py                   # Pydantic settings and configuration
+│   ├── database.py                 # Database operations and Supabase client
+│   ├── auth.py                     # Authentication utilities
+│   └── socketio.py                 # WebSocket configuration
+├── models/                         # Database models and schemas
+│   ├── user.py                     # User model definitions
+│   └── forecast.py                 # Forecast model definitions
+├── routers/                        # API route handlers
+│   ├── auth.py                     # Authentication endpoints
+│   └── forecast.py                 # Forecast endpoints
+├── services/                       # Business logic and services
+│   ├── auth_service.py             # Authentication business logic
+│   ├── background_tasks.py         # Background task processing
+│   ├── knowledge_service.py        # AI knowledge management
+│   ├── query_parser.py             # Natural language query parsing
+│   ├── vector_service.py           # Vector search operations
+│   └── calculators/                # Financial calculation engines
+│       ├── large_customer_calculator.py
+│       └── smb_calculator.py
+└── tests/                          # Test files
+    └── test_forecast.py            # Forecast functionality tests
+```
+
+### **Key Backend Files**
+- **`simple_main.py`**: Main application with comprehensive forecasting logic
+- **`core/config.py`**: Environment variables and application settings
+- **`core/database.py`**: Supabase integration and database operations
+- **`services/query_parser.py`**: Natural language processing for queries
+- **`services/calculators/`**: Financial calculation engines
+
+## 🧩 **Shared Components (`components/`)**
+
+### **Component Organization**
+```
+components/
+├── ui/                             # Shadcn/ui component library
+│   ├── button.tsx                  # Button component
+│   ├── card.tsx                    # Card component
+│   ├── input.tsx                   # Input component
+│   ├── table.tsx                   # Table component
+│   └── ... (50+ UI components)
+├── features/                       # Feature-specific components
+│   ├── assumptions-panel.tsx       # Assumptions configuration
+│   ├── forecast-chart.tsx          # Chart visualization
+│   ├── forecast-table.tsx          # Data table display
+│   ├── query-input.tsx             # Query input interface
+│   └── summary-cards.tsx           # Summary metrics cards
+├── layout/                         # Layout components
+│   └── header.tsx                  # Application header
+├── auth-provider.tsx               # Authentication context
+├── query-provider.tsx              # Query state management
+└── theme-provider.tsx              # Theme management
+```
+
+## 🔧 **Configuration Files**
+
+### **Package Management**
+- **`package.json`**: Node.js dependencies and scripts
+- **`package-lock.json`**: Locked dependency versions
+- **`pnpm-lock.yaml`**: PNPM lock file
+- **`requirements.txt`**: Python dependencies
+
+### **Build Configuration**
+- **`next.config.mjs`**: Next.js configuration
+- **`tsconfig.json`**: TypeScript configuration
+- **`tailwind.config.js`**: Tailwind CSS configuration
+- **`postcss.config.mjs`**: PostCSS configuration
+- **`components.json`**: Shadcn/ui configuration
+
+### **Environment Configuration**
+- **`.env.example`**: Environment variables template
+- **`.env`**: Local environment variables (gitignored)
+
+## 📚 **Documentation Files**
+
+### **Project Documentation**
+- **`README.md`**: Main project documentation
+- **`CONTRIBUTING.md`**: Contribution guidelines
+- **`LICENSE`**: MIT License
+- **`PROJECT-STRUCTURE.md`**: This file
+
+### **Setup Documentation**
+- **`README-SETUP.md`**: Detailed setup instructions
+- **`QUICK-START.md`**: Quick start guide
+- **`SUPABASE-MIGRATION.md`**: Database migration guide
+
+## 🚀 **Scripts and Automation**
+
+### **Startup Scripts**
+- **`simple-start.bat`**: Windows startup script (recommended)
+- **`start-project.bat`**: Alternative startup script
+- **`start.bat`**: Basic startup script
+
+### **Setup Scripts**
+- **`setup.bat`**: Project setup script
+
+## 📊 **Data Files**
+
+### **Sample Data**
+- **`sample_company_data.json`**: Example company data structure
+- **`users_data.json`**: User database (auto-generated, gitignored)
+
+### **Database Files**
+- **`init.sql`**: Database initialization script
+- **`supabase-schema.sql`**: Supabase database schema
+
+## 🎨 **Static Assets (`public/`)**
+
+### **Images and Icons**
+- **`placeholder-logo.png`**: Company logo placeholder
+- **`placeholder-logo.svg`**: SVG logo placeholder
+- **`placeholder-user.jpg`**: User avatar placeholder
+- **`placeholder.jpg`**: General image placeholder
+- **`placeholder.svg`**: SVG placeholder
+
+## 🔗 **Key Dependencies**
+
+### **Frontend Dependencies**
+- **Next.js 14**: React framework with App Router
+- **React 18**: UI library
+- **TypeScript**: Type safety
+- **Tailwind CSS**: Styling framework
+- **Shadcn/ui**: Component library
+- **Recharts**: Chart visualization
+- **Framer Motion**: Animations
+- **Three.js**: 3D graphics
+- **Axios**: HTTP client
+
+### **Backend Dependencies**
+- **FastAPI**: Web framework
+- **Uvicorn**: ASGI server
+- **Pydantic**: Data validation
+- **Supabase**: Database and authentication
+- **OpenAI**: AI integration
+- **Anthropic**: Claude AI integration
+- **Python-multipart**: File upload support
+
+## 🏗️ **Architecture Patterns**
+
+### **Frontend Architecture**
+- **Component-Based**: Modular React components
+- **Hook-Based State**: Custom hooks for state management
+- **Service Layer**: API services for backend communication
 - **Type Safety**: Full TypeScript coverage
-- **Consistent Patterns**: Similar structure across features
 
-## 🔧 **Technology Stack**
+### **Backend Architecture**
+- **Layered Architecture**: Clear separation of concerns
+- **Service Pattern**: Business logic in services
+- **Repository Pattern**: Data access abstraction
+- **Dependency Injection**: Configurable dependencies
 
-### **Frontend**
-- **Framework**: Next.js 14 with App Router
-- **UI Library**: Shadcn/ui with Radix UI
-- **Styling**: Tailwind CSS
-- **State Management**: React hooks + custom hooks
-- **Charts**: Recharts
-- **Authentication**: Supabase Auth
+## 🔄 **Data Flow**
 
-### **Backend**
-- **Framework**: FastAPI
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth
-- **Background Tasks**: FastAPI BackgroundTasks
-- **AI Integration**: OpenAI API
-- **File Generation**: openpyxl
+### **Forecast Generation Flow**
+1. **User Input**: Natural language query
+2. **Query Parsing**: Extract assumptions and parameters
+3. **Calculation**: Run financial models
+4. **AI Analysis**: Generate insights
+5. **Response**: Return structured data
+6. **Visualization**: Display charts and tables
+7. **Export**: Generate Excel/PDF reports
 
-### **Development**
-- **Language**: TypeScript + Python
-- **Package Manager**: pnpm (frontend) + pip (backend)
-- **Linting**: ESLint + Prettier
-- **Testing**: Jest + pytest
+### **Authentication Flow**
+1. **Registration**: Create user account
+2. **Login**: Authenticate user
+3. **Session**: Maintain login state
+4. **Authorization**: Protect routes and data
+5. **Company Data**: Load user-specific data
 
-## 📋 **File Naming Conventions**
+## 🧪 **Testing Structure**
 
-### **Components**
-- **PascalCase**: `ForecastTable.tsx`, `QueryInput.tsx`
-- **kebab-case**: `use-forecast.ts`, `forecast-chart.tsx`
+### **Test Organization**
+```
+tests/
+├── backend/                        # Backend tests
+│   ├── test_forecast.py           # Forecast functionality
+│   └── test_auth.py               # Authentication tests
+├── frontend/                       # Frontend tests
+│   ├── components/                # Component tests
+│   └── pages/                     # Page tests
+└── integration/                    # Integration tests
+    └── test_api.py                # API integration tests
+```
 
-### **Backend**
-- **snake_case**: `background_tasks.py`, `query_parser.py`
-- **PascalCase**: `ForecastQuery`, `ForecastResult`
+## 📈 **Performance Considerations**
 
-### **Configuration**
-- **kebab-case**: `next.config.mjs`, `postcss.config.mjs`
-- **UPPER_CASE**: Environment variables
+### **Frontend Optimization**
+- **Code Splitting**: Lazy loading of components
+- **Image Optimization**: Next.js image optimization
+- **Bundle Analysis**: Webpack bundle analyzer
+- **Caching**: Browser and CDN caching
 
-## 🚀 **Getting Started**
+### **Backend Optimization**
+- **Async/Await**: Non-blocking operations
+- **Connection Pooling**: Database connection management
+- **Caching**: Redis caching (optional)
+- **Rate Limiting**: API rate limiting
 
-1. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   npm install
-   ```
+## 🔒 **Security Considerations**
 
-2. **Configure Environment**:
-   ```bash
-   cp env.example .env
-   # Edit .env with your Supabase credentials
-   ```
+### **Authentication Security**
+- **Password Hashing**: SHA-256 with salt
+- **Session Management**: Secure session handling
+- **CORS Configuration**: Proper CORS setup
+- **Input Validation**: Pydantic validation
 
-3. **Start Development**:
-   ```bash
-   # Backend
-   python -m backend.main
-   
-   # Frontend (in another terminal)
-   npm run dev
-   ```
+### **Data Security**
+- **File Upload Validation**: Secure file handling
+- **SQL Injection Prevention**: Parameterized queries
+- **XSS Protection**: Input sanitization
+- **Environment Variables**: Secure configuration
 
-## 📈 **Benefits of This Structure**
+## 🚀 **Deployment Structure**
 
-- **Maintainability**: Clear separation of concerns
-- **Scalability**: Easy to add new features
-- **Developer Experience**: Consistent patterns and naming
-- **Type Safety**: Full TypeScript coverage
-- **Performance**: Optimized imports and lazy loading
-- **Testing**: Clear test organization
+### **Production Deployment**
+```
+production/
+├── docker/                         # Docker configurations
+│   ├── Dockerfile.backend          # Backend container
+│   ├── Dockerfile.frontend         # Frontend container
+│   └── docker-compose.yml          # Multi-container setup
+├── nginx/                          # Reverse proxy config
+│   └── nginx.conf                  # Nginx configuration
+└── scripts/                        # Deployment scripts
+    ├── deploy.sh                   # Deployment script
+    └── backup.sh                   # Backup script
+```
 
-This structure provides a solid foundation for the FinSynth application while maintaining clean, organized, and scalable code.
+This structure provides a solid foundation for the FinSynth application while maintaining clean, organized, and scalable code. Each directory and file has a specific purpose and follows established patterns for maintainability and extensibility.

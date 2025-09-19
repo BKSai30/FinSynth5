@@ -1,78 +1,79 @@
 # 🚀 FinSynth - AI-Powered Financial Forecasting Platform
 
-A complete AI-powered financial forecasting platform that converts natural language queries into structured financial forecasts. Built with modern technologies and featuring persistent user storage, file upload capabilities, and intelligent AI insights.
+<div align="center">
 
-## 🎯 **What This Is**
+![FinSynth Logo](https://img.shields.io/badge/FinSynth-AI%20Financial%20Forecasting-blue?style=for-the-badge&logo=chart-line)
 
-FinSynth is a production-ready financial forecasting platform that:
-- **Converts natural language queries** into structured financial forecasts
-- **Uses multiple AI services** (OpenAI GPT-4, Anthropic Claude) with intelligent fallbacks
-- **Performs pure Python calculations** for accurate financial modeling
-- **Supports persistent user storage** with file-based database
-- **Allows JSON file uploads** for custom company data
-- **Provides intelligent AI insights** with rule-based fallbacks
-- **Offers a beautiful, responsive dashboard** with modern UI/UX
-- **Supports dark/light mode** with smooth transitions
-- **Features secure authentication** with persistent login sessions
+**Transform financial planning with AI-powered forecasting that converts natural language queries into structured financial projections.**
 
-## 🏗️ **Complete Architecture**
+[![Python](https://img.shields.io/badge/Python-3.10+-green?style=flat&logo=python)](https://python.org)
+[![Next.js](https://img.shields.io/badge/Next.js-14+-black?style=flat&logo=next.js)](https://nextjs.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green?style=flat&logo=fastapi)](https://fastapi.tiangolo.com)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue?style=flat&logo=typescript)](https://typescriptlang.org)
 
-### **Backend (FastAPI + Python)**
-- ✅ **FastAPI** with async/await for high performance
-- ✅ **File-based persistent storage** for user data and company information
-- ✅ **Multiple AI services** (OpenAI GPT-4, Anthropic Claude) with fallbacks
-- ✅ **File upload support** for JSON company data
-- ✅ **Secure authentication** with password hashing
-- ✅ **Advanced query parsing** with regex patterns for business scenarios
-- ✅ **Financial Calculation Engines** for accurate modeling
-- ✅ **Intelligent AI insights** with rule-based fallbacks
+</div>
 
-### **Frontend (Next.js + React)**
-- ✅ **Next.js 14** with App Router and TypeScript
-- ✅ **Tailwind CSS** for modern, responsive styling
-- ✅ **File upload interface** for JSON company data
-- ✅ **Persistent login sessions** with localStorage
-- ✅ **Dark/Light Mode** with smooth transitions
-- ✅ **Responsive design** for all devices
-- ✅ **Professional UI/UX** with modern components
+## 🎯 **What is FinSynth?**
 
-## 📁 **Project Structure**
+FinSynth is a production-ready AI-powered financial forecasting platform that revolutionizes how businesses plan their financial future. Simply ask questions in natural language, and our AI converts them into comprehensive financial projections with detailed breakdowns.
+
+### **Example Queries:**
+- *"Show me revenue for the next 6 months if I increase my customer base by 20%"*
+- *"What will be my revenue in 2 years with a SaaS business model?"*
+- *"Optimize my business and reduce costs by 15% over the next year"*
+
+## ✨ **Key Features**
+
+### 🤖 **AI-Powered Intelligence**
+- **Natural Language Processing**: Convert plain English queries into financial forecasts
+- **Multiple AI Services**: OpenAI GPT-4 and Anthropic Claude with intelligent fallbacks
+- **Smart Query Parsing**: Understands business context and extracts key parameters
+- **Rule-based Fallbacks**: Works even when AI services are unavailable
+
+### 📊 **Comprehensive Financial Modeling**
+- **Dual Business Models**: Large Customer (Enterprise) and SMB Customer segments
+- **Advanced Calculations**: Pure Python financial engines for accurate modeling
+- **Seasonal Analysis**: Industry-specific seasonal patterns (Retail, Technology, Healthcare, etc.)
+- **Growth Scenarios**: Customer growth, revenue optimization, cost reduction analysis
+
+### 📈 **Professional Data Visualization**
+- **Interactive Charts**: Real-time data visualization with Recharts
+- **Detailed Tables**: Month-by-month breakdown of all metrics
+- **Export Capabilities**: Excel and PDF report generation
+- **Summary Cards**: Key performance indicators at a glance
+
+### 🔐 **Enterprise-Grade Security**
+- **Secure Authentication**: Password hashing with salt
+- **Persistent Sessions**: Login survives server restarts
+- **File-based Storage**: No external database dependencies
+- **Supabase Integration**: Optional cloud database support
+
+### 🎨 **Modern User Experience**
+- **Responsive Design**: Works perfectly on all devices
+- **Dark/Light Mode**: Smooth theme switching
+- **Professional UI**: Built with Tailwind CSS and Shadcn/ui
+- **Real-time Updates**: WebSocket integration for live progress
+
+## 🏗️ **Architecture Overview**
 
 ```
 FinSynth/
-├── backend/                    # FastAPI Backend
-│   ├── simple_main.py         # Main FastAPI application
-│   ├── core/                  # Configuration & database
-│   │   ├── config.py         # Pydantic settings
-│   │   ├── database.py       # Database client
-│   │   └── auth.py           # Authentication utilities
-│   ├── models/               # Database models
-│   ├── routers/              # API endpoints
-│   ├── services/             # Business logic
-│   │   ├── calculators/      # Financial engines
-│   │   └── knowledge_service.py  # AI integration
-│   └── tests/                # Test files
-├── app/                      # Next.js Frontend (App Router)
-│   ├── page.tsx             # Homepage
-│   ├── login/               # Authentication pages
-│   ├── forecast/            # Forecasting interface
-│   ├── components/          # React components
-│   │   ├── ui/             # UI component library
-│   │   ├── features/       # Feature components
-│   │   └── layout/         # Layout components
-│   ├── lib/                # Utilities
-│   │   └── utils.ts        # Utility functions
-│   ├── hooks/              # Custom React hooks
-│   ├── services/           # API services
-│   └── types/              # TypeScript types
-├── components/             # Shared components
-├── public/                # Static assets
-├── requirements.txt       # Python dependencies
-├── package.json          # Node.js dependencies
-├── users_data.json       # Persistent user storage (auto-generated)
-├── sample_company_data.json  # Sample data file
-├── .gitignore           # Git ignore rules
-└── README.md           # This file
+├── 🎨 Frontend (Next.js + React)
+│   ├── Interactive Dashboard
+│   ├── Natural Language Query Interface
+│   ├── Data Visualization & Charts
+│   └── Export & Report Generation
+│
+├── ⚡ Backend (FastAPI + Python)
+│   ├── AI Query Processing
+│   ├── Financial Calculation Engines
+│   ├── User Authentication
+│   └── File Upload & Management
+│
+└── 🧠 AI Services
+    ├── OpenAI GPT-4 Integration
+    ├── Anthropic Claude Integration
+    └── Intelligent Fallback System
 ```
 
 ## 🚀 **Quick Start**
@@ -83,14 +84,13 @@ FinSynth/
 - OpenAI API key (optional - has fallbacks)
 - Anthropic Claude API key (optional - has fallbacks)
 
-### **Setup Steps**
-
-#### 1. **Clone and Navigate**
+### **1. Clone the Repository**
 ```bash
-cd FinSynth
+git clone https://github.com/yourusername/finsynth.git
+cd finsynth
 ```
 
-#### 2. **Backend Setup**
+### **2. Backend Setup**
 ```bash
 # Install Python dependencies
 pip install -r requirements.txt
@@ -99,85 +99,92 @@ pip install -r requirements.txt
 pip install python-multipart
 ```
 
-#### 3. **Frontend Setup**
+### **3. Frontend Setup**
 ```bash
 # Install Node.js dependencies
 npm install
 ```
 
-#### 4. **Environment Configuration (Optional)**
+### **4. Environment Configuration (Optional)**
 ```bash
 # Create .env file with your API keys (optional - has fallbacks)
 # OPENAI_API_KEY=your-openai-api-key
 # ANTHROPIC_API_KEY=your-anthropic-api-key
 ```
 
-#### 5. **Start the Application**
+### **5. Start the Application**
+
+**Option A: Use the startup script (Windows)**
+```bash
+simple-start.bat
+```
+
+**Option B: Manual startup**
 
 **Terminal 1 - Backend:**
 ```bash
-# Start FastAPI server
 python backend/simple_main.py
 ```
 
 **Terminal 2 - Frontend:**
 ```bash
-# Start Next.js development server
 npm run dev
 ```
 
-#### 6. **Access the Application**
+### **6. Access the Application**
 - **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8001
-- **API Documentation**: http://localhost:8001/docs
-- **Debug Users**: http://localhost:8001/api/v1/debug/users
+- **Backend API**: http://localhost:8003
+- **API Documentation**: http://localhost:8003/docs
 
-## 🧠 **AI-Powered Features**
+## 📊 **Financial Model Structure**
 
-### **Natural Language Processing**
-- **Input**: "Show me revenue for the next 12 months if we increase marketing spend by 20%"
-- **Output**: Structured JSON with intent, parameters, and assumption overrides
-- **Processing**: Multiple AI services with intelligent fallbacks
+Our platform uses a sophisticated dual-segment business model:
 
-### **Advanced Query Understanding**
-- **Business Models**: SaaS, Enterprise, E-commerce, Startup scenarios
-- **Time Periods**: Months, years, quarterly, annual forecasts
-- **Growth Scenarios**: Percentage increases, cost reductions, revenue targets
-- **Optimization**: Revenue optimization, cost cutting, efficiency improvements
+### **Large Customer Segment (Enterprise)**
+- **Sales Team Growth**: Configurable sales team expansion
+- **Deal Closure Rate**: Deals per salesperson per month
+- **Average Revenue Per User (ARPU)**: $16,500/month
+- **Customer Acquisition**: Direct sales approach
 
-### **Financial Models**
-- **Large Customer Model**: ARPU $16,500, sales team growth, deal closure rates
-- **SMB Customer Model**: ARPU $500, marketing spend, CAC, conversion rates
-- **Pure Python Calculations**: All calculations performed by deterministic functions
-- **Growth Multipliers**: Customer growth, revenue optimization, expense reduction
+### **SMB Customer Segment**
+- **Digital Marketing**: Configurable monthly marketing budget
+- **Lead Generation**: Marketing spend → leads → conversions
+- **Average Revenue Per User (ARPU)**: $500/month
+- **Customer Acquisition**: Marketing-driven approach
 
-### **Intelligent AI Insights**
-- **Multiple AI Services**: OpenAI GPT-4, Anthropic Claude with fallbacks
-- **Rule-based Fallbacks**: Smart insights when AI services are unavailable
-- **Context-aware Analysis**: Tailored insights based on user queries
-- **Actionable Recommendations**: Business advice based on forecast results
+### **Key Metrics Tracked**
+- Sales team headcount and productivity
+- Customer acquisition costs (CAC)
+- Conversion rates and lead generation
+- Monthly recurring revenue (MRR)
+- Customer lifetime value (LTV)
+- Churn rates and growth multipliers
 
-## 🔧 **Key Features**
+## 🎨 **User Interface Features**
 
-### **Persistent User Storage**
-- **File-based Database**: Users stored in `users_data.json`
-- **Secure Authentication**: Password hashing with salt
-- **Session Persistence**: Login survives server restarts
-- **Company Data Storage**: User-specific financial data
+### **Dashboard**
+- **Welcome Screen**: Professional landing page with project overview
+- **Login/Registration**: Secure authentication with company data setup
+- **Forecasting Interface**: Natural language query input with advanced options
 
-### **File Upload System**
-- **JSON File Upload**: Upload custom company data
-- **Data Validation**: Ensures proper JSON format
-- **Automatic Integration**: Uploaded data used in forecasting
-- **Override Capability**: Replace existing company data
+### **Data Management**
+- **File Upload**: JSON and Excel file support for company data
+- **Data Validation**: Ensures proper data format and structure
+- **Company Profiles**: Persistent storage of business information
 
-### **Enhanced Forecasting**
-- **Smart Query Parsing**: Understands business context
-- **Accurate Predictions**: Based on uploaded company data
-- **Multiple Scenarios**: Different business models supported
-- **Professional Insights**: AI-generated business recommendations
+### **Advanced Options**
+- **Industry Selection**: Technology, Retail, Healthcare, Education, etc.
+- **Seasonal Analysis**: Industry-specific seasonal pattern adjustments
+- **News Impact**: External market factor integration (optional)
+- **Growth Scenarios**: Custom growth multipliers and optimization
 
-## 📊 **API Endpoints**
+### **Results & Export**
+- **Interactive Charts**: Revenue, customers, and profit visualization
+- **Detailed Tables**: Month-by-month breakdown of all metrics
+- **Excel Export**: Comprehensive financial projection model
+- **PDF Reports**: Professional presentation-ready reports
+
+## 🔧 **API Endpoints**
 
 ### **Authentication**
 - `POST /api/v1/auth/register` - User registration with company data
@@ -193,12 +200,52 @@ npm run dev
 
 ### **Debug & Monitoring**
 - `GET /api/v1/debug/users` - View stored users (development only)
+- `GET /health` - Health check endpoint
 
-### **Example API Usage**
+## 📁 **Project Structure**
 
+```
+FinSynth/
+├── 📁 app/                          # Next.js Frontend
+│   ├── forecast/                    # Forecasting interface
+│   ├── login/                       # Authentication pages
+│   ├── components/                  # React components
+│   │   ├── ui/                     # Shadcn/ui components
+│   │   ├── features/               # Feature-specific components
+│   │   └── layout/                 # Layout components
+│   ├── lib/                        # Utilities and configurations
+│   ├── hooks/                      # Custom React hooks
+│   └── services/                   # API services
+├── 📁 backend/                      # FastAPI Backend
+│   ├── simple_main.py              # Main FastAPI application
+│   ├── core/                       # Configuration & database
+│   │   ├── config.py              # Pydantic settings
+│   │   ├── database.py            # Database client
+│   │   └── auth.py                # Authentication utilities
+│   ├── models/                     # Database models
+│   ├── routers/                    # API endpoints
+│   ├── services/                   # Business logic
+│   │   ├── calculators/           # Financial engines
+│   │   └── knowledge_service.py   # AI integration
+│   └── tests/                      # Test files
+├── 📁 components/                   # Shared components
+├── 📁 public/                       # Static assets
+├── 📄 Configuration Files
+│   ├── package.json               # Node.js dependencies
+│   ├── requirements.txt           # Python dependencies
+│   ├── tsconfig.json             # TypeScript configuration
+│   └── tailwind.config.js        # Tailwind CSS configuration
+└── 📄 Documentation
+    ├── README.md                  # This file
+    └── PROJECT-STRUCTURE.md       # Detailed structure guide
+```
+
+## 🧪 **Example Usage**
+
+### **1. Register and Login**
 ```bash
 # Register a new user
-curl -X POST "http://localhost:8001/api/v1/auth/register" \
+curl -X POST "http://localhost:8003/api/v1/auth/register" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "user@example.com",
@@ -211,9 +258,12 @@ curl -X POST "http://localhost:8001/api/v1/auth/register" \
       "customers": 50
     }
   }'
+```
 
+### **2. Create a Forecast**
+```bash
 # Create a forecast
-curl -X POST "http://localhost:8001/api/v1/forecast" \
+curl -X POST "http://localhost:8003/api/v1/forecast" \
   -H "Content-Type: application/json" \
   -d '{
     "query": "What will be my revenue in the next 6 months if I increase my customer base by 20%",
@@ -223,8 +273,10 @@ curl -X POST "http://localhost:8001/api/v1/forecast" \
       "customers": 50
     }
   }'
+```
 
-# Response
+### **3. Sample Response**
+```json
 {
   "query_id": 4872,
   "status": "completed",
@@ -245,8 +297,42 @@ curl -X POST "http://localhost:8001/api/v1/forecast" \
 }
 ```
 
-### **Sample Company Data JSON Format**
+## 🎯 **Supported Query Types**
 
+### **Revenue Forecasting**
+- *"Show me revenue for the next 6 months"*
+- *"What will be my revenue in 2 years?"*
+- *"Forecast revenue for the next 12 months"*
+
+### **Growth Scenarios**
+- *"If I increase my customer base by 20%"*
+- *"What if I double my marketing spend?"*
+- *"Show me growth with 100% customer increase"*
+
+### **Business Model Analysis**
+- *"SaaS business model with $2M target"*
+- *"Enterprise B2B model analysis"*
+- *"E-commerce retail projections"*
+
+### **Cost Optimization**
+- *"Reduce costs by 15% over the next year"*
+- *"Optimize my business operations"*
+- *"Cut expenses by 20%"*
+
+## 🔧 **Configuration Options**
+
+### **Environment Variables**
+```bash
+# AI Services (Optional - has fallbacks)
+OPENAI_API_KEY=your-openai-api-key-here
+ANTHROPIC_API_KEY=your-anthropic-api-key-here
+
+# Application Settings
+DEBUG=true
+ENVIRONMENT=development
+```
+
+### **Company Data Format**
 ```json
 {
   "revenue": 250000,
@@ -272,111 +358,71 @@ curl -X POST "http://localhost:8001/api/v1/forecast" \
 }
 ```
 
-## 🎨 **Frontend Features**
-
-### **Interactive Dashboard**
-- **Modern Homepage** with professional design
-- **Natural Language Query Input** with AI processing
-- **File Upload Interface** for JSON company data
-- **Real-time Progress Updates** during processing
-- **Data Visualization** with comprehensive forecast tables
-- **Responsive Design** for all devices
-- **Dark/Light Mode** with smooth transitions
-
-### **User Experience**
-- **Persistent Login Sessions** with localStorage
-- **Secure Authentication** with password protection
-- **Company Data Management** with upload capabilities
-- **Professional UI/UX** with modern components
-- **Error Handling** with user-friendly messages
-
-## 🔧 **Configuration**
-
-### **Environment Variables (Optional)**
-
-```bash
-# AI Services (Optional - has fallbacks)
-OPENAI_API_KEY=your-openai-api-key-here
-ANTHROPIC_API_KEY=your-anthropic-api-key-here
-
-# Application Settings
-DEBUG=true
-ENVIRONMENT=development
-```
-
-**Note**: The application works without any environment variables as it has intelligent fallbacks for all AI services and uses file-based storage instead of external databases.
-
-### **Supported Query Types**
-- **Revenue Forecasting**: "What will be my revenue in the next 6 months?"
-- **Growth Scenarios**: "If I increase my customer base by 20%"
-- **Business Model Analysis**: "SaaS business model with $2M target"
-- **Cost Optimization**: "Reduce costs by 15% over the next year"
-- **Marketing Analysis**: "With $50,000 monthly marketing budget"
-
-### **Example Queries**
-- "What will be my revenue in the next 6 months if I increase my customer base by 20%"
-- "I want to reach $2M revenue in 2 years with a SaaS business model"
-- "Optimize my business and reduce costs by 15% over the next year"
-- "What if I increase marketing spend by 20%?"
-- "Forecast revenue for the next 12 months with 100% customer growth"
-
 ## 🧪 **Testing**
 
+### **Backend Tests**
 ```bash
-# Backend tests
 cd backend
 pytest
+```
 
-# Frontend tests
-cd frontend
+### **Frontend Tests**
+```bash
 npm test
 ```
 
-## 📈 **Production Deployment**
+### **Manual Testing**
+1. Register a new user
+2. Upload company data
+3. Create various forecast queries
+4. Test export functionality
+5. Verify data accuracy
 
-### **Environment Setup**
-- Use strong `JWT_SECRET`
-- Set `DEBUG=false`
-- Configure production database URLs
-- Set up proper CORS origins
+## 🚀 **Deployment**
 
-## 🔮 **Advanced Features**
+### **Production Environment**
+1. Set `DEBUG=false`
+2. Configure production database URLs
+3. Set up proper CORS origins
+4. Use strong JWT secrets
+5. Configure reverse proxy (nginx)
 
-### **3D Animations**
-- **Three.js Integration** with React Three Fiber
-- **Animated Spheres** with distortion effects
-- **Floating Elements** with smooth animations
-- **Interactive Controls** with OrbitControls
+### **Docker Deployment**
+```dockerfile
+# Backend
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY backend/ .
+CMD ["python", "simple_main.py"]
 
-### **Modern UI/UX**
-- **Glass Morphism Effects** with backdrop blur
-- **Gradient Text** and button effects
-- **Smooth Transitions** with Framer Motion
-- **Responsive Grid Layouts**
-- **Professional Color Schemes**
-
-### **Supabase Integration**
-- **Authentication** with built-in user management
-- **Database** with PostgreSQL and real-time subscriptions
-- **Row Level Security** for secure data access
-- **Real-time Updates** across all connected clients
-
-## 📚 **Documentation**
-
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Supabase Documentation](https://supabase.com/docs)
-- [Three.js Documentation](https://threejs.org/docs/)
-- [Framer Motion](https://www.framer.com/motion/)
-- [OpenAI API](https://platform.openai.com/docs)
+# Frontend
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY app/ .
+RUN npm run build
+CMD ["npm", "start"]
+```
 
 ## 🤝 **Contributing**
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+We welcome contributions! Please follow these steps:
+
+1. **Fork the repository**
+2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
+3. **Commit your changes** (`git commit -m 'Add amazing feature'`)
+4. **Push to the branch** (`git push origin feature/amazing-feature`)
+5. **Open a Pull Request**
+
+### **Development Guidelines**
+- Follow PEP 8 for Python code
+- Use TypeScript for frontend development
+- Write tests for new features
+- Update documentation as needed
+- Follow conventional commit messages
 
 ## 📄 **License**
 
@@ -393,17 +439,7 @@ This implementation provides a complete, production-ready foundation for AI-powe
 - **Enhanced UI**: More interactive dashboard features
 - **Mobile App**: React Native mobile application
 
-## 🚀 **Key Benefits of This Architecture**
-
-- **Simplified Setup**: No Redis or Celery configuration needed
-- **Built-in Auth**: Supabase handles user management
-- **Real-time**: Live updates across all clients
-- **Scalable**: Supabase handles database scaling
-- **Modern Stack**: Latest technologies and best practices
-- **Production Ready**: Secure, performant, and maintainable
-- **Hackathon Ready**: Complete working solution with professional UI
-
-## 🏆 **Production-Ready Features**
+## 🏆 **Key Benefits**
 
 - ✅ **Complete Working Solution** - Ready for production use
 - ✅ **Professional UI/UX** - Modern design with dark/light mode
@@ -415,8 +451,6 @@ This implementation provides a complete, production-ready foundation for AI-powe
 - ✅ **Smart Query Parsing** - Understands business context
 - ✅ **Comprehensive Documentation** - Easy setup and deployment
 - ✅ **No External Dependencies** - Works without databases or external services
-
-**Ready to transform financial planning with AI! 🚀**
 
 ## 🆘 **Troubleshooting**
 
@@ -456,9 +490,18 @@ This implementation provides a complete, production-ready foundation for AI-powe
 
 ### **Debug Endpoints**
 
-- **View Users**: http://localhost:8001/api/v1/debug/users
-- **API Documentation**: http://localhost:8001/docs
+- **View Users**: http://localhost:8003/api/v1/debug/users
+- **API Documentation**: http://localhost:8003/docs
 
-**Happy coding! 🎉**
-#   F i n S y n t h  
- 
+---
+
+<div align="center">
+
+**Ready to transform financial planning with AI! 🚀**
+
+Made with ❤️ by the FinSynth Team
+
+[![GitHub stars](https://img.shields.io/github/stars/yourusername/finsynth?style=social)](https://github.com/yourusername/finsynth)
+[![GitHub forks](https://img.shields.io/github/forks/yourusername/finsynth?style=social)](https://github.com/yourusername/finsynth)
+
+</div>

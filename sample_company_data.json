@@ -1,0 +1,22 @@
+{
+  "revenue": 250000,
+  "expenses": 150000,
+  "customers": 120,
+  "company_name": "TechCorp Solutions",
+  "industry": "Technology",
+  "business_model": "SaaS",
+  "monthly_recurring_revenue": 45000,
+  "customer_acquisition_cost": 800,
+  "lifetime_value": 2500,
+  "churn_rate": 0.05,
+  "growth_rate": 0.15,
+  "employees": 25,
+  "founded_year": 2020,
+  "target_market": "Enterprise",
+  "key_metrics": {
+    "monthly_active_users": 5000,
+    "conversion_rate": 0.12,
+    "average_deal_size": 15000,
+    "sales_cycle_days": 90
+  }
+}
